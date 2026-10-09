@@ -5,13 +5,18 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/lib/i18n/context';
 import { VillageEvent } from '@/types';
 import { Plus, Edit2, Trash2, Calendar, MapPin, Trophy, X, Check } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function AdminEventsPage() {
   const { lang, resolveBilingual } = useLanguage();
+  const toast = useToast();
   const [events, setEvents] = useState<VillageEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<VillageEvent | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states
   const [titleBn, setTitleBn] = useState('');
@@ -112,29 +117,46 @@ export default function AdminEventsPage() {
       showInHero,
     };
 
-    if (editingEvent) {
-      await fetch(`/api/events/${editingEvent.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    }
+    try {
+      if (editingEvent) {
+        const res = await fetch(`/api/events/${editingEvent.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to update event');
+        toast.success(lang === 'bn' ? 'অনুষ্ঠান সফলভাবে আপডেট করা হয়েছে' : 'Event updated successfully');
+      } else {
+        const res = await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to create event');
+        toast.success(lang === 'bn' ? 'নতুন অনুষ্ঠান সফলভাবে তৈরি হয়েছে' : 'New event created successfully');
+      }
 
-    setIsModalOpen(false);
-    loadEvents();
+      setIsModalOpen(false);
+      loadEvents();
+    } catch (err: any) {
+      toast.error(err.message || 'Error saving event');
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    const confirmMsg = lang === 'bn' ? 'আপনি কি নিশ্চিত যে এই অনুষ্ঠানটি মুছতে চান?' : 'Are you sure you want to delete this event?';
-    if (!confirm(confirmMsg)) return;
-    await fetch(`/api/events/${id}`, { method: 'DELETE' });
-    loadEvents();
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/events/${deleteTargetId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      toast.success(lang === 'bn' ? 'অনুষ্ঠানটি সফলভাবে মুছে ফেলা হয়েছে' : 'Event deleted successfully');
+      setDeleteTargetId(null);
+      loadEvents();
+    } catch (err: any) {
+      toast.error(err.message || 'Error deleting event');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -211,7 +233,7 @@ export default function AdminEventsPage() {
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(ev.id)}
+                        onClick={() => setDeleteTargetId(ev.id)}
                         className="p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600"
                         title={lang === 'bn' ? 'মুছুন' : 'Delete'}
                       >
@@ -448,6 +470,23 @@ export default function AdminEventsPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Event Confirmation Modal */}
+        <ConfirmModal
+          isOpen={Boolean(deleteTargetId)}
+          title={lang === 'bn' ? 'অনুষ্ঠান মুছে ফেলা নিশ্চিতকরণ' : 'Confirm Event Deletion'}
+          message={
+            lang === 'bn'
+              ? 'আপনি কি নিশ্চিত যে এই অনুষ্ঠানটি মুছে ফেলতে চান? এটি মুছে ফেললে এর সাথে যুক্ত নিবন্ধন ও বিবরণ প্রদর্শিত হবে না।'
+              : 'Are you sure you want to delete this event? This action will permanently remove it from the schedule.'
+          }
+          confirmText={lang === 'bn' ? 'হ্যাঁ, মুছে ফেলুন' : 'Yes, Delete Event'}
+          cancelText={lang === 'bn' ? 'বাতিল' : 'Cancel'}
+          isDestructive={true}
+          isLoading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => !isDeleting && setDeleteTargetId(null)}
+        />
       </div>
     </AdminLayout>
   );

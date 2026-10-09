@@ -20,6 +20,8 @@ import {
   Globe,
   LogOut,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 const ALL_PERMISSIONS: { key: PermissionKey; labelBn: string; labelEn: string }[] = [
   { key: 'events.manage', labelBn: 'অনুষ্ঠান তৈরি ও সম্পাদনা (Events)', labelEn: 'Events Management' },
@@ -39,15 +41,12 @@ const ALL_PERMISSIONS: { key: PermissionKey; labelBn: string; labelEn: string }[
 export default function SuperAdminPage() {
   const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
+  const toast = useToast();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // New admin input
   const [newEmail, setNewEmail] = useState('');
@@ -59,14 +58,26 @@ export default function SuperAdminPage() {
   ]);
 
   const [statusMsg, setStatusMsg] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loadData = async () => {
     if (!user || user.role !== 'super_admin') return;
     try {
       const [admRes, setRes, logRes] = await Promise.all([
-        fetch('/api/admin/users', { headers: { 'x-user-email': user.email } }),
-        fetch('/api/admin/settings', { headers: { 'x-user-email': user.email } }),
-        fetch('/api/admin/audit-logs', { headers: { 'x-user-email': user.email } }),
+        fetch(`/api/admin/users?actorEmail=${encodeURIComponent(user.email)}`, {
+          headers: { 'x-user-email': user.email },
+        }),
+        fetch('/api/admin/settings', {
+          headers: { 'x-user-email': user.email },
+        }),
+        fetch(`/api/admin/audit-logs?actorEmail=${encodeURIComponent(user.email)}`, {
+          headers: { 'x-user-email': user.email },
+        }),
       ]);
       if (admRes.ok) setAdmins(await admRes.json());
       if (setRes.ok) setSettings(await setRes.json());
@@ -87,54 +98,82 @@ export default function SuperAdminPage() {
   }, [authLoading, user]);
 
   const handleTogglePermission = async (admin: AdminUser, perm: PermissionKey) => {
+    if (!user) return;
     const exists = admin.permissions.includes(perm);
     const updatedPermissions = exists
       ? admin.permissions.filter((p) => p !== perm)
       : [...admin.permissions, perm];
 
     try {
-      await fetch('/api/admin/users', {
+      const res = await fetch('/api/admin/users', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email,
+        },
         body: JSON.stringify({
           email: admin.email,
           permissions: updatedPermissions,
+          actorEmail: user.email,
         }),
       });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error);
+      }
+      toast.success(lang === 'bn' ? 'অনুমতি সফলভাবে আপডেট করা হয়েছে' : 'Permission updated successfully');
       loadData();
-    } catch {
-      alert(lang === 'bn' ? 'অনুমতি আপডেটে সমস্যা হয়েছে' : 'Failed to update permission');
+    } catch (err: any) {
+      toast.error(err.message || (lang === 'bn' ? 'অনুমতি আপডেটে সমস্যা হয়েছে' : 'Failed to update permission'));
     }
   };
 
   const handleToggleActive = async (admin: AdminUser) => {
+    if (!user) return;
     try {
-      await fetch('/api/admin/users', {
+      const res = await fetch('/api/admin/users', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email,
+        },
         body: JSON.stringify({
           email: admin.email,
           active: !admin.active,
+          actorEmail: user.email,
         }),
       });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error);
+      }
+      toast.success(lang === 'bn' ? 'অ্যাডমিন স্ট্যাটাস আপডেট হয়েছে' : 'Admin status updated');
       loadData();
-    } catch {
-      alert(lang === 'bn' ? 'স্ট্যাটাস আপডেটে সমস্যা হয়েছে' : 'Failed to update status');
+    } catch (err: any) {
+      toast.error(err.message || (lang === 'bn' ? 'স্ট্যাটাস আপডেটে সমস্যা হয়েছে' : 'Failed to update status'));
     }
   };
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim()) return;
+    if (!user) {
+      toast.error(lang === 'bn' ? 'লগইন সেশন পাওয়া যায়নি' : 'Login session required');
+      return;
+    }
 
     try {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email,
+        },
         body: JSON.stringify({
           email: newEmail.trim(),
           name: newName.trim(),
           permissions: newPermissions,
+          actorEmail: user.email,
         }),
       });
 
@@ -143,6 +182,11 @@ export default function SuperAdminPage() {
         throw new Error(data.error);
       }
 
+      toast.success(
+        lang === 'bn'
+          ? `✓ অ্যাডমিন (${newEmail}) সফলভাবে তৈরি হয়েছে!`
+          : `✓ Admin (${newEmail}) added successfully!`
+      );
       setStatusMsg(
         lang === 'bn'
           ? `✓ অ্যাডমিন (${newEmail}) সফলভাবে তৈরি হয়েছে!`
@@ -152,43 +196,69 @@ export default function SuperAdminPage() {
       setNewName('');
       loadData();
     } catch (err: any) {
-      alert(err.message || (lang === 'bn' ? 'অ্যাডমিন তৈরিতে ত্রুটি হয়েছে' : 'Error creating admin'));
+      toast.error(err.message || (lang === 'bn' ? 'অ্যাডমিন তৈরিতে ত্রুটি হয়েছে' : 'Error creating admin'));
     }
   };
 
-  const handleDeleteAdmin = async (email: string) => {
-    const confirmMsg =
-      lang === 'bn'
-        ? `আপনি কি নিশ্চিত যে ${email} কে অ্যাডমিন থেকে অপসারণ করতে চান?`
-        : `Are you sure you want to remove ${email} from admins?`;
-    if (!confirm(confirmMsg)) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || !user) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `/api/admin/users?email=${encodeURIComponent(deleteTarget)}&actorEmail=${encodeURIComponent(user.email)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'x-user-email': user.email,
+          },
+        }
+      );
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error);
       }
+      toast.success(
+        lang === 'bn'
+          ? `${deleteTarget} কে অ্যাডমিন থেকে অপসারণ করা হয়েছে`
+          : `Removed ${deleteTarget} from administrators`
+      );
+      setDeleteTarget(null);
       loadData();
     } catch (err: any) {
-      alert(err.message || (lang === 'bn' ? 'অ্যাডমিন অপসারণে ত্রুটি হয়েছে' : 'Error removing admin'));
+      toast.error(err.message || (lang === 'bn' ? 'অ্যাডমিন অপসারণে ত্রুটি হয়েছে' : 'Error removing admin'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleToggleReviewer = async (email: string) => {
-    if (!settings) return;
+    if (!settings || !user) return;
     const exists = settings.reviewerAdmins.includes(email);
     const updated = exists
       ? settings.reviewerAdmins.filter((e) => e !== email)
       : [...settings.reviewerAdmins, email];
 
-    await fetch('/api/admin/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reviewerAdmins: updated }),
-    });
-    loadData();
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email,
+        },
+        body: JSON.stringify({
+          reviewerAdmins: updated,
+          actorEmail: user.email,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error);
+      }
+      toast.success(lang === 'bn' ? 'রিভিউয়ার তালিকা আপডেট হয়েছে' : 'Reviewer list updated');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || (lang === 'bn' ? 'রিভিউয়ার আপডেটে ত্রুটি' : 'Error updating reviewers'));
+    }
   };
 
   // 1. Loading authentication (Guaranteed same on SSR and initial client hydration pass)
@@ -471,7 +541,7 @@ export default function SuperAdminPage() {
                       <td className="p-3 text-right">
                         {!isRoot && (
                           <button
-                            onClick={() => handleDeleteAdmin(adm.email)}
+                            onClick={() => setDeleteTarget(adm.email)}
                             className="p-1.5 text-rose-400 hover:bg-rose-950/60 rounded"
                             title={lang === 'bn' ? 'মুছুন' : 'Delete'}
                           >
@@ -565,6 +635,23 @@ export default function SuperAdminPage() {
             </table>
           </div>
         </div>
+
+        {/* Delete Admin Confirmation Modal */}
+        <ConfirmModal
+          isOpen={Boolean(deleteTarget)}
+          title={lang === 'bn' ? 'অ্যাডমিন অপসারণ নিশ্চিতকরণ' : 'Confirm Admin Removal'}
+          message={
+            lang === 'bn'
+              ? `আপনি কি নিশ্চিত যে '${deleteTarget}' কে অ্যাডমিন প্যানেল থেকে অপসারণ করতে চান? তার সকল অ্যাডমিন অনুমতি বাতিল হয়ে যাবে।`
+              : `Are you sure you want to remove '${deleteTarget}' from administrators? All their admin privileges will be revoked.`
+          }
+          confirmText={lang === 'bn' ? 'হ্যাঁ, অপসারণ করুন' : 'Yes, Remove Admin'}
+          cancelText={lang === 'bn' ? 'বাতিল' : 'Cancel'}
+          isDestructive={true}
+          isLoading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => !isDeleting && setDeleteTarget(null)}
+        />
       </div>
     </div>
   );

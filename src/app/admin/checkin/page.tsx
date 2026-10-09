@@ -20,10 +20,12 @@ import {
   XCircle,
   Sparkles,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 export default function MatchdayCheckinPage() {
   const { user } = useAuth();
   const { lang, resolveBilingual } = useLanguage();
+  const toast = useToast();
 
   const [passInput, setPassInput] = useState('');
   const [checking, setChecking] = useState(false);
@@ -95,7 +97,7 @@ export default function MatchdayCheckinPage() {
     } catch (err: any) {
       console.error('Camera start error:', err);
       await stopCameraScanner();
-      alert(
+      toast.error(
         lang === 'bn'
           ? 'ক্যামেরা চালু করতে সমস্যা হয়েছে। ক্যামেরা পারমিশন দেওয়া আছে কিনা দেখুন।'
           : 'Failed to access camera. Please allow camera permissions in your browser.'

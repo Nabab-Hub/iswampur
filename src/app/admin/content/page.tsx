@@ -5,9 +5,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/lib/i18n/context';
 import { SiteSettings } from '@/types';
 import { Settings, Save, CheckCircle2, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 export default function AdminContentPage() {
   const { lang } = useLanguage();
+  const toast = useToast();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,9 +47,13 @@ export default function AdminContentPage() {
       });
       if (res.ok) {
         setSavedSuccess(true);
+        toast.success(lang === 'bn' ? 'সেটিংস সফলভাবে সংরক্ষিত হয়েছে' : 'Settings saved successfully');
+      } else {
+        const d = await res.json();
+        throw new Error(d.error);
       }
-    } catch {
-      alert(lang === 'bn' ? 'সেটিংস সংরক্ষণে ব্যর্থ হয়েছে' : 'Failed to save settings');
+    } catch (err: any) {
+      toast.error(err?.message || (lang === 'bn' ? 'সেটিংস সংরক্ষণে ব্যর্থ হয়েছে' : 'Failed to save settings'));
     } finally {
       setSaving(false);
     }
@@ -74,11 +80,12 @@ export default function AdminContentPage() {
               }
             : null
         );
+        toast.success(lang === 'bn' ? 'QR কোড সফলভাবে আপলোড হয়েছে' : 'QR code uploaded successfully');
       } else {
-        alert(data.error || (lang === 'bn' ? 'আপলোড ব্যর্থ হয়েছে' : 'Upload failed'));
+        toast.error(data.error || (lang === 'bn' ? 'আপলোড ব্যর্থ হয়েছে' : 'Upload failed'));
       }
     } catch (err: any) {
-      alert('Upload error: ' + err.message);
+      toast.error('Upload error: ' + err.message);
     } finally {
       setUploadingQr(false);
     }

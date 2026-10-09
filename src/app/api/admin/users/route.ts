@@ -4,9 +4,16 @@ import { AdminUser } from '@/types';
 
 export async function GET(req: NextRequest) {
   try {
-    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const actorEmail = (
+      req.headers.get('x-user-email') ||
+      req.nextUrl.searchParams.get('actorEmail') ||
+      ''
+    ).toLowerCase().trim();
     const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
-    if (actorEmail !== superAdminEmail) {
+    const adminRecord = await repository.getAdminByEmail(actorEmail);
+    const isSuperAdmin = actorEmail === superAdminEmail || adminRecord?.role === 'super_admin';
+
+    if (!isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
     }
 
@@ -20,13 +27,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const body = await req.json();
+    const actorEmail = (
+      req.headers.get('x-user-email') ||
+      body.actorEmail ||
+      ''
+    ).toLowerCase().trim();
     const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
-    if (actorEmail !== superAdminEmail) {
+    const adminRecord = await repository.getAdminByEmail(actorEmail);
+    const isSuperAdmin = actorEmail === superAdminEmail || adminRecord?.role === 'super_admin';
+
+    if (!isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
     }
-
-    const body = await req.json();
 
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -77,13 +90,19 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const body = await req.json();
+    const actorEmail = (
+      req.headers.get('x-user-email') ||
+      body.actorEmail ||
+      ''
+    ).toLowerCase().trim();
     const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
-    if (actorEmail !== superAdminEmail) {
+    const adminRecord = await repository.getAdminByEmail(actorEmail);
+    const isSuperAdmin = actorEmail === superAdminEmail || adminRecord?.role === 'super_admin';
+
+    if (!isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
     }
-
-    const body = await req.json();
 
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -123,13 +142,19 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const { searchParams } = new URL(req.url);
+    const actorEmail = (
+      req.headers.get('x-user-email') ||
+      searchParams.get('actorEmail') ||
+      ''
+    ).toLowerCase().trim();
     const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
-    if (actorEmail !== superAdminEmail) {
+    const adminRecord = await repository.getAdminByEmail(actorEmail);
+    const isSuperAdmin = actorEmail === superAdminEmail || adminRecord?.role === 'super_admin';
+
+    if (!isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
     }
-
-    const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
 
     if (!email) {

@@ -41,8 +41,11 @@ const DEFAULT_CRICKET_RULES_EN = `1. Each registered squad must have a minimum o
 5. Any misconduct or unsporting behavior will lead to immediate disqualification without fee refund.
 6. Registration fee must be fully settled with a valid bank UTR transaction receipt before confirmation.`;
 
+import { useToast } from '@/components/ui/Toast';
+
 export default function FormBuilderPage() {
   const { lang, resolveBilingual } = useLanguage();
+  const toast = useToast();
 
   const [events, setEvents] = useState<VillageEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
@@ -163,7 +166,7 @@ export default function FormBuilderPage() {
   const handleAddCustomField = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLabelBn.trim()) {
-      alert(lang === 'bn' ? 'ফিল্ডের বাংলা নাম লিখুন' : 'Please provide Bengali label');
+      toast.warning(lang === 'bn' ? 'ফিল্ডের বাংলা নাম লিখুন' : 'Please provide Bengali label');
       return;
     }
 
@@ -288,6 +291,11 @@ export default function FormBuilderPage() {
 
       const savedData = await res.json();
       setSavedSuccess(true);
+      toast.success(
+        lang === 'bn'
+          ? '✓ ফর্ম ও টুর্নামেন্ট কনফিগারেশন সফলভাবে সংরক্ষিত হয়েছে!'
+          : '✓ Form configuration and tournament rules saved successfully!'
+      );
       if (isCreatingNew) {
         setIsCreatingNew(false);
         setSelectedEventId(savedData.id);
@@ -298,7 +306,9 @@ export default function FormBuilderPage() {
       setTimeout(() => setSavedSuccess(false), 4000);
     } catch (err: any) {
       console.error('Error saving form builder:', err);
-      setErrorMessage(err.message || 'Something went wrong while saving.');
+      const msg = err.message || 'Something went wrong while saving.';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

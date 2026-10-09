@@ -17,12 +17,14 @@ import {
   X,
   ExternalLink,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 function RegistrationsReviewContent() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('id');
 
   const { lang, t } = useLanguage();
+  const toast = useToast();
   const { user, hasPermission } = useAuth();
   const [registrations, setRegistrations] = useState<TeamRegistration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,11 @@ function RegistrationsReviewContent() {
     if (!selectedReg || !reviewAction) return;
 
     if ((reviewAction === 'REJECT' || reviewAction === 'CORRECTION_REQUIRED') && !reviewReason.trim()) {
-      alert(lang === 'bn' ? 'প্রত্যাখ্যান বা সংশোধনের জন্য কারণ উল্লেখ করা বাধ্যতামূলক।' : 'Please provide a reason for rejection or correction.');
+      toast.warning(
+        lang === 'bn'
+          ? 'প্রত্যাখ্যান বা সংশোধনের জন্য কারণ উল্লেখ করা বাধ্যতামূলক।'
+          : 'Please provide a reason for rejection or correction.'
+      );
       return;
     }
 
@@ -85,15 +91,17 @@ function RegistrationsReviewContent() {
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || (lang === 'bn' ? 'পর্যালোচনা ব্যর্থ হয়েছে' : 'Review action failed'));
 
-      setActionSuccessMsg(
+      const successMsg =
         reviewAction === 'APPROVE'
           ? (lang === 'bn'
             ? `✓ দলটি অনুমোদিত হয়েছে এবং ডিজিটাল টিম পাস (${resData.humanPassCode}) ইমেইলে প্রেরিত হয়েছে!`
             : `✓ Squad approved! Digital Team Pass (${resData.humanPassCode}) issued and emailed.`)
           : (lang === 'bn'
             ? `✓ দলের অবস্থা পরিবর্তন করা হয়েছে (${resData.status}) এবং ইমেইল নোটিফিকেশন পাঠানো হয়েছে।`
-            : `✓ Registration status updated (${resData.status}) and email notification dispatched.`)
-      );
+            : `✓ Registration status updated (${resData.status}) and email notification dispatched.`);
+
+      setActionSuccessMsg(successMsg);
+      toast.success(successMsg);
 
       // Refresh list
       await loadRegistrations();
@@ -101,7 +109,7 @@ function RegistrationsReviewContent() {
       setReviewAction(null);
       setReviewReason('');
     } catch (err: any) {
-      alert(err.message || 'Error occurred');
+      toast.error(err.message || 'Error occurred');
     } finally {
       setProcessing(false);
     }

@@ -94,7 +94,7 @@ export const bn = {
     emergencyName: 'জরুরি যোগাযোগের ব্যক্তি',
     emergencyPhone: 'জরুরি মোবাইল নম্বর',
     playersSection: 'খেলোয়াড় তালিকা',
-    addPlayer: '+ খেলোয়াড় যোগ করুন',
+    addPlayer: 'খেলোয়াড় যোগ করুন',
     removePlayer: 'মুছুন',
     playerPlaceholder: 'খেলোয়াড়ের পুরো নাম',
     paymentHeading: 'নিবন্ধন ফি প্রদান',

@@ -17,13 +17,18 @@ import {
   Camera,
 } from 'lucide-react';
 import ImageSlider from '@/components/common/ImageSlider';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function AdminPostsPage() {
   const { lang, resolveBilingual } = useLanguage();
+  const toast = useToast();
   const [posts, setPosts] = useState<PostAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<PostAnnouncement | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [titleBn, setTitleBn] = useState('');
   const [titleEn, setTitleEn] = useState('');
@@ -98,9 +103,10 @@ export default function AdminPostsPage() {
 
       if (uploadedUrls.length > 0) {
         setImages((prev) => [...prev, ...uploadedUrls]);
+        toast.success(lang === 'bn' ? 'ছবি সফলভাবে আপলোড হয়েছে' : 'Images uploaded successfully');
       }
     } catch (err: any) {
-      alert('Upload error: ' + err.message);
+      toast.error('Upload error: ' + err.message);
     } finally {
       setUploadingImages(false);
     }
@@ -130,27 +136,38 @@ export default function AdminPostsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+        toast.success(lang === 'bn' ? 'পোস্ট সফলভাবে আপডেট করা হয়েছে' : 'Post updated successfully');
       } else {
         await fetch('/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+        toast.success(lang === 'bn' ? 'নতুন পোস্ট সফলভাবে তৈরি হয়েছে' : 'New post created successfully');
       }
       setIsModalOpen(false);
       loadPosts();
     } catch (err: any) {
-      alert('Save error: ' + err.message);
+      toast.error('Save error: ' + err.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const confirmMsg = lang === 'bn' ? 'মুছতে নিশ্চিত?' : 'Are you sure you want to delete this notice?';
-    if (!confirm(confirmMsg)) return;
-    await fetch(`/api/posts/${id}`, { method: 'DELETE' });
-    loadPosts();
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/posts/${deleteTargetId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      toast.success(lang === 'bn' ? 'পোস্ট সফলভাবে মুছে ফেলা হয়েছে' : 'Post deleted successfully');
+      setDeleteTargetId(null);
+      loadPosts();
+    } catch (err: any) {
+      toast.error(err.message || 'Error deleting post');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -234,7 +251,7 @@ export default function AdminPostsPage() {
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(post.id)}
+                        onClick={() => setDeleteTargetId(post.id)}
                         className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 rounded-xl transition-all hover:scale-110"
                         title={lang === 'bn' ? 'মুছুন' : 'Delete'}
                       >
@@ -436,6 +453,23 @@ export default function AdminPostsPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Post Confirmation Modal */}
+        <ConfirmModal
+          isOpen={Boolean(deleteTargetId)}
+          title={lang === 'bn' ? 'পোস্ট মুছে ফেলা নিশ্চিতকরণ' : 'Confirm Post Deletion'}
+          message={
+            lang === 'bn'
+              ? 'আপনি কি নিশ্চিত যে এই পোস্টটি মুছে ফেলতে চান? মুছে ফেলার পর এটি ওয়েবসাইট থেকে চিরতরে মুছে যাবে।'
+              : 'Are you sure you want to delete this notice/post? This action cannot be undone.'
+          }
+          confirmText={lang === 'bn' ? 'হ্যাঁ, মুছে ফেলুন' : 'Yes, Delete Post'}
+          cancelText={lang === 'bn' ? 'বাতিল' : 'Cancel'}
+          isDestructive={true}
+          isLoading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => !isDeleting && setDeleteTargetId(null)}
+        />
       </div>
     </AdminLayout>
   );

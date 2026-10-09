@@ -4,6 +4,7 @@ import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/context';
 import { ThemeProvider } from '@/lib/theme/themeContext';
 import { AuthProvider } from '@/lib/auth/authContext';
+import { ToastProvider } from '@/components/ui/Toast';
 
 const hindSiliguri = Hind_Siliguri({
   weight: ['400', '500', '600', '700'],
@@ -230,7 +231,9 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {children}
+              <ToastProvider>
+                {children}
+              </ToastProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

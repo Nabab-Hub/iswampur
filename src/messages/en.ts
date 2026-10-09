@@ -96,7 +96,7 @@ export const en: typeof bn = {
     emergencyName: 'Emergency Contact Person',
     emergencyPhone: 'Emergency Phone Number',
     playersSection: 'Squad Members',
-    addPlayer: '+ Add Player',
+    addPlayer: 'Add Player',
     removePlayer: 'Remove',
     playerPlaceholder: 'Player Full Name',
     paymentHeading: 'Registration Fee Payment',
