@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/lib/i18n/context';
 import { VillageEvent } from '@/types';
-import { Plus, Edit2, Trash2, Calendar, MapPin, Trophy, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, MapPin, Trophy, X, Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -17,6 +17,7 @@ export default function AdminEventsPage() {
   const [editingEvent, setEditingEvent] = useState<VillageEvent | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form states
   const [titleBn, setTitleBn] = useState('');
@@ -117,6 +118,7 @@ export default function AdminEventsPage() {
       showInHero,
     };
 
+    setIsSaving(true);
     try {
       if (editingEvent) {
         const res = await fetch(`/api/events/${editingEvent.id}`, {
@@ -140,6 +142,8 @@ export default function AdminEventsPage() {
       loadEvents();
     } catch (err: any) {
       toast.error(err.message || 'Error saving event');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -461,9 +465,17 @@ export default function AdminEventsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 shadow-md"
+                    disabled={isSaving}
+                    className="px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-60 shadow-md flex items-center gap-2"
                   >
-                    {lang === 'bn' ? 'সংরক্ষণ করুন' : 'Save Event'}
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}</span>
+                      </>
+                    ) : (
+                      <span>{lang === 'bn' ? 'সংরক্ষণ করুন' : 'Save Event'}</span>
+                    )}
                   </button>
                 </div>
               </form>

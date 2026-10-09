@@ -36,6 +36,7 @@ import {
   Clock,
   Sparkles,
   Phone,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -81,6 +82,7 @@ export default function SuperAdminPage() {
 
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // New admin input
   const [newEmail, setNewEmail] = useState('');
@@ -196,6 +198,7 @@ export default function SuperAdminPage() {
       ? admin.permissions.filter((p) => p !== perm)
       : [...admin.permissions, perm];
 
+    setActionLoading(`perm_${admin.id}_${perm}`);
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
@@ -217,11 +220,14 @@ export default function SuperAdminPage() {
       loadData();
     } catch (err: any) {
       toast.error(err.message || (lang === 'bn' ? 'অনুমতি আপডেটে সমস্যা হয়েছে' : 'Failed to update permission'));
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleToggleActive = async (admin: AdminUser) => {
     if (!user) return;
+    setActionLoading(`active_${admin.id}`);
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
@@ -243,6 +249,8 @@ export default function SuperAdminPage() {
       loadData();
     } catch (err: any) {
       toast.error(err.message || (lang === 'bn' ? 'স্ট্যাটাস আপডেটে সমস্যা হয়েছে' : 'Failed to update status'));
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -254,6 +262,7 @@ export default function SuperAdminPage() {
       return;
     }
 
+    setActionLoading('add_admin');
     try {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
@@ -289,6 +298,8 @@ export default function SuperAdminPage() {
       loadData();
     } catch (err: any) {
       toast.error(err.message || (lang === 'bn' ? 'অ্যাডমিন তৈরিতে ত্রুটি হয়েছে' : 'Error creating admin'));
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -330,6 +341,7 @@ export default function SuperAdminPage() {
       ? settings.reviewerAdmins.filter((e) => e !== email)
       : [...settings.reviewerAdmins, email];
 
+    setActionLoading(`reviewer_${email}`);
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
@@ -350,6 +362,8 @@ export default function SuperAdminPage() {
       loadData();
     } catch (err: any) {
       toast.error(err.message || (lang === 'bn' ? 'রিভিউয়ার আপডেটে ত্রুটি' : 'Error updating reviewers'));
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -1008,7 +1022,13 @@ export default function SuperAdminPage() {
                           : 'bg-[#0C1A40] border-[#1d3575] text-slate-400 hover:text-white'
                       }`}
                     >
-                      {isSelected ? <CheckSquare className="w-4 h-4 text-[#F9A01B]" /> : <Square className="w-4 h-4" />}
+                      {actionLoading === `reviewer_${admin.email}` ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-[#F9A01B]" />
+                      ) : isSelected ? (
+                        <CheckSquare className="w-4 h-4 text-[#F9A01B]" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
                       <span>{admin.email}</span>
                     </button>
                   );
@@ -1067,7 +1087,7 @@ export default function SuperAdminPage() {
                             return (
                               <td key={perm.key} className="p-2 text-center">
                                 <button
-                                  disabled={isRoot}
+                                  disabled={isRoot || actionLoading === `perm_${adm.id}_${perm.key}`}
                                   onClick={() => handleTogglePermission(adm, perm.key)}
                                   className={`p-1 rounded transition-colors ${
                                     isRoot
@@ -1078,7 +1098,13 @@ export default function SuperAdminPage() {
                                   }`}
                                   title={lang === 'bn' ? perm.labelBn : perm.labelEn}
                                 >
-                                  {hasPerm ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                                  {actionLoading === `perm_${adm.id}_${perm.key}` ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-[#F9A01B] mx-auto" />
+                                  ) : hasPerm ? (
+                                    <CheckSquare className="w-4 h-4" />
+                                  ) : (
+                                    <Square className="w-4 h-4" />
+                                  )}
                                 </button>
                               </td>
                             );
@@ -1086,7 +1112,7 @@ export default function SuperAdminPage() {
 
                           <td className="p-3 text-center">
                             <button
-                              disabled={isRoot}
+                              disabled={isRoot || actionLoading === `active_${adm.id}`}
                               onClick={() => handleToggleActive(adm)}
                               className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                                 adm.active
@@ -1094,7 +1120,13 @@ export default function SuperAdminPage() {
                                   : 'bg-rose-950 text-rose-400'
                               }`}
                             >
-                              {adm.active ? (lang === 'bn' ? 'সক্রিয়' : 'Active') : (lang === 'bn' ? 'নিষ্ক্রিয়' : 'Disabled')}
+                              {actionLoading === `active_${adm.id}` ? (
+                                <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                              ) : adm.active ? (
+                                lang === 'bn' ? 'সক্রিয়' : 'Active'
+                              ) : (
+                                lang === 'bn' ? 'নিষ্ক্রিয়' : 'Disabled'
+                              )}
                             </button>
                           </td>
 
@@ -1151,10 +1183,20 @@ export default function SuperAdminPage() {
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 text-white shadow-md flex items-center gap-1.5"
+                  disabled={actionLoading === 'add_admin'}
+                  className="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-50 text-white shadow-md flex items-center gap-1.5"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>{lang === 'bn' ? 'অ্যাডমিন হিসেবে যুক্ত করুন' : 'Add as Administrator'}</span>
+                  {actionLoading === 'add_admin' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{lang === 'bn' ? 'যুক্ত হচ্ছে...' : 'Adding...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>{lang === 'bn' ? 'অ্যাডমিন হিসেবে যুক্ত করুন' : 'Add as Administrator'}</span>
+                    </>
+                  )}
                 </button>
               </form>
             </div>

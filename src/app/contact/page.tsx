@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/lib/i18n/context';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function ContactPage() {
   const { lang, t } = useLanguage();
@@ -168,10 +168,19 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={sending}
-                    className="w-full py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] transition-all flex items-center justify-center gap-2 shadow-md uppercase tracking-wider text-sm"
+                    className="w-full py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-60 transition-all flex items-center justify-center gap-2 shadow-md uppercase tracking-wider text-sm"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>{sending ? (lang === 'bn' ? 'পাঠানো হচ্ছে...' : 'Sending...') : (lang === 'bn' ? 'বার্তা প্রেরণ করুন' : 'Send Message')}</span>
+                    {sending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === 'bn' ? 'পাঠানো হচ্ছে...' : 'Sending...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>{lang === 'bn' ? 'বার্তা প্রেরণ করুন' : 'Send Message'}</span>
+                      </>
+                    )}
                   </button>
                 </form>
               )}

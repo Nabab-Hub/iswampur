@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Hind_Siliguri, Inter } from 'next/font/google';
 import './globals.css';
@@ -5,6 +6,7 @@ import { LanguageProvider } from '@/lib/i18n/context';
 import { ThemeProvider } from '@/lib/theme/themeContext';
 import { AuthProvider } from '@/lib/auth/authContext';
 import { ToastProvider } from '@/components/ui/Toast';
+import GlobalLoadingBar from '@/components/common/GlobalLoadingBar';
 
 const hindSiliguri = Hind_Siliguri({
   weight: ['400', '500', '600', '700'],
@@ -232,6 +234,9 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <ToastProvider>
+                <React.Suspense fallback={null}>
+                  <GlobalLoadingBar />
+                </React.Suspense>
                 {children}
               </ToastProvider>
             </AuthProvider>

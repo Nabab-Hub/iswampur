@@ -19,6 +19,7 @@ import {
   RefreshCw,
   XCircle,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
@@ -406,8 +407,17 @@ export default function MatchdayCheckinPage() {
                   disabled={checking}
                   className="px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-50 text-xs transition-all flex items-center gap-1.5 shadow-md shrink-0 hover:scale-[1.02]"
                 >
-                  <Search className="w-3.5 h-3.5" />
-                  <span>{checking ? '...' : lang === 'bn' ? 'যাচাই' : 'Verify'}</span>
+                  {checking ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>{lang === 'bn' ? 'যাচাই হচ্ছে...' : 'Verifying...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-3.5 h-3.5" />
+                      <span>{lang === 'bn' ? 'যাচাই' : 'Verify'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

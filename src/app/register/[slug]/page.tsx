@@ -21,6 +21,7 @@ import {
   Plus,
   Trash2,
   FileCheck,
+  Loader2,
 } from 'lucide-react';
 
 export default function RegistrationPage() {
@@ -786,7 +787,10 @@ export default function RegistrationPage() {
                   className="px-8 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-40 transition-all shadow-lg flex items-center gap-2 uppercase tracking-wider text-sm"
                 >
                   {submitting ? (
-                    <span>{lang === 'bn' ? 'জমা হচ্ছে...' : 'Submitting...'}</span>
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{lang === 'bn' ? 'জমা হচ্ছে...' : 'Submitting...'}</span>
+                    </>
                   ) : (
                     <>
                       <span>{t.registration.submitBtn}</span>

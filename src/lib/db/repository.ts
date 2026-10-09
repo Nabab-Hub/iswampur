@@ -599,16 +599,59 @@ export const repository = {
     if (db) {
       try {
         const snap = await getDocs(collection(db, 'admins'));
+        let items: AdminUser[] = [];
         if (!snap.empty) {
-          const items = snap.docs.map((doc: any) => doc.data() as AdminUser);
-          globalStore.admins = items;
-          return items;
-        } else {
-          for (const adm of globalStore.admins) {
-            const docId = adm.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
-            await setDoc(doc(db, 'admins', docId), cleanForFirestore(adm));
+          items = snap.docs.map((doc: any) => doc.data() as AdminUser);
+        }
+
+        // Ensure default admins (super_admin & initial admin) are always included
+        for (const defAdm of DEFAULT_ADMINS) {
+          const exists = items.some(
+            (a) => a.email.toLowerCase() === defAdm.email.toLowerCase()
+          );
+          if (!exists) {
+            items.push(defAdm);
+            try {
+              const docId = defAdm.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+              await setDoc(doc(db, 'admins', docId), cleanForFirestore(defAdm));
+            } catch {}
           }
         }
+
+        // Check if settings.reviewerAdmins has any emails that should also be recognized
+        try {
+          const settings = await this.getSettings();
+          if (settings && Array.isArray(settings.reviewerAdmins)) {
+            for (const email of settings.reviewerAdmins) {
+              const norm = email.toLowerCase().trim();
+              if (norm && !items.some((a) => a.email.toLowerCase() === norm)) {
+                const syncdAdmin: AdminUser = {
+                  id: `admin_${norm.replace(/[^a-zA-Z0-9]/g, '_')}`,
+                  email: norm,
+                  name: norm.split('@')[0],
+                  role: norm === DEFAULT_SUPER_ADMIN_EMAIL.toLowerCase() ? 'super_admin' : 'admin',
+                  permissions: [
+                    'events.manage',
+                    'gallery.manage',
+                    'notices.manage',
+                    'registrations.view',
+                    'registrations.review',
+                    'payments.verify',
+                  ],
+                  active: true,
+                  addedBy: 'SETTINGS_REVIEWER',
+                  createdAt: new Date().toISOString(),
+                };
+                items.push(syncdAdmin);
+                const docId = norm.replace(/[^a-zA-Z0-9]/g, '_');
+                await setDoc(doc(db, 'admins', docId), cleanForFirestore(syncdAdmin));
+              }
+            }
+          }
+        } catch {}
+
+        globalStore.admins = items;
+        return items;
       } catch (err) {
         console.warn('Firestore getAdmins error:', err);
       }

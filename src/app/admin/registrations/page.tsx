@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   X,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
@@ -482,9 +483,16 @@ function RegistrationsReviewContent() {
                       <button
                         disabled={processing}
                         onClick={handleReviewSubmit}
-                        className="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#F26522] to-[#F9A01B] text-white shadow-md uppercase tracking-wider"
+                        className="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-60 text-white shadow-md uppercase tracking-wider flex items-center gap-1.5"
                       >
-                        {processing ? (lang === 'bn' ? 'প্রক্রিয়াধীন...' : 'Processing...') : (lang === 'bn' ? 'সিদ্ধান্ত চূড়ান্ত করুন' : 'Confirm Decision')}
+                        {processing ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>{lang === 'bn' ? 'প্রক্রিয়াধীন...' : 'Processing...'}</span>
+                          </>
+                        ) : (
+                          <span>{lang === 'bn' ? 'সিদ্ধান্ত চূড়ান্ত করুন' : 'Confirm Decision'}</span>
+                        )}
                       </button>
                     </div>
                   </div>

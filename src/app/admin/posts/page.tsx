@@ -438,15 +438,16 @@ export default function AdminPostsPage() {
                   <button
                     type="submit"
                     disabled={saving || uploadingImages}
-                    className="px-6 py-2.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-50 shadow-md hover:scale-105 transition-all"
+                    className="px-6 py-2.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-50 shadow-md hover:scale-105 transition-all flex items-center gap-2"
                   >
-                    {saving
-                      ? lang === 'bn'
-                        ? 'সংরক্ষণ হচ্ছে...'
-                        : 'Saving...'
-                      : lang === 'bn'
-                      ? 'পোস্ট প্রকাশ করুন'
-                      : 'Publish Post'}
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}</span>
+                      </>
+                    ) : (
+                      <span>{lang === 'bn' ? 'পোস্ট প্রকাশ করুন' : 'Publish Post'}</span>
+                    )}
                   </button>
                 </div>
               </form>

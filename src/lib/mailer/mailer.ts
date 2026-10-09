@@ -14,13 +14,13 @@ const transporter = isMailConfigured
       port: Number(process.env.SMTP_PORT) || 465,
       secure: Number(process.env.SMTP_PORT) === 465 || process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.SMTP_USER || 'sumanaisbadgirl@gmail.com',
-        pass: process.env.SMTP_PASS || 'bfgn xeph emsg inee',
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',
       },
     })
   : null;
 
-const SENDER_EMAIL = process.env.SMTP_USER || 'sumanaisbadgirl@gmail.com';
+const SENDER_EMAIL = process.env.SMTP_USER || 'noreply@iswampur.org';
 const MAIL_FROM = process.env.MAIL_FROM || `"Iswampur Premier League" <${SENDER_EMAIL}>`;
 
 export async function sendEmail(options: {
