@@ -22,6 +22,29 @@ import {
   Flame,
 } from 'lucide-react';
 
+function GoogleIcon() {
+  return (
+    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12c0 2.03.45 3.84 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const { lang, toggleLanguage, t } = useLanguage();
@@ -48,9 +71,9 @@ export default function Navbar() {
       <div className="h-1 w-full bg-gradient-to-r from-[#F26522] via-[#F9A01B] to-[#00A3E0]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
           {/* Logo & Village / IPL Title */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-[#08143A] via-[#102766] to-[#19398A] dark:from-[#0B1A42] dark:to-[#1E4BB8] p-1 shadow-md flex items-center justify-center group-hover:scale-105 transition-transform border border-[#F9A01B]/40 overflow-hidden shrink-0">
               <Image
                 src="/logo-square-web.png"
@@ -77,43 +100,43 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  className={`h-9 px-3 xl:px-3.5 rounded-xl text-xs xl:text-[13px] font-bold transition-all flex items-center justify-center whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#19398A] text-white shadow-sm'
+                      ? 'bg-[#19398A] dark:bg-[#1b3e9b] text-white shadow-xs'
                       : link.isIPL
-                      ? 'text-[#F26522] dark:text-[#F9A01B] hover:bg-[#F26522]/10 border border-[#F26522]/30'
-                      : 'text-[#08143A] dark:text-[#CBD5E1] hover:text-[#19398A] dark:hover:text-white hover:bg-[#e6eef8] dark:hover:bg-[#0d1e49]'
+                      ? 'text-[#F26522] dark:text-[#F9A01B] hover:bg-[#F26522]/10 font-extrabold'
+                      : 'text-slate-700 dark:text-slate-200 hover:text-[#19398A] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0d1e49]'
                   }`}
                 >
-                  {link.icon && <link.icon className="w-4 h-4" />}
                   <span>{link.label}</span>
                   {link.isIPL && (
-                    <Flame className="w-3.5 h-3.5 text-[#F26522] animate-pulse ml-0.5" />
+                    <span className="ml-1.5 flex h-1.5 w-1.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F26522] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#F26522]"></span>
+                    </span>
                   )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right Action Icons & Auth */}
-          <div className="hidden sm:flex items-center gap-3">
-            {/* Language Switcher - High Contrast & Immediate Toggle */}
+          {/* Right Action Buttons */}
+          <div className="hidden sm:flex items-center gap-2 lg:gap-2.5 shrink-0">
+            {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#0c1a40] text-[#08143A] dark:text-white hover:border-[#F26522] hover:text-[#F26522] dark:hover:text-[#F9A01B] transition-all shadow-xs"
+              className="h-9 px-3 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#1d3575] bg-slate-100/80 dark:bg-[#0c1a40] text-slate-800 dark:text-slate-200 hover:border-[#F26522] hover:text-[#F26522] dark:hover:text-[#F9A01B] transition-all flex items-center gap-1.5 shadow-xs whitespace-nowrap"
               title="Toggle Bengali / English"
             >
-              <Globe className="w-4 h-4 text-[#F26522]" />
-              <span className="tracking-wide">
-                {lang === 'bn' ? 'English (EN)' : 'বাংলা (BN)'}
-              </span>
+              <Globe className="w-3.5 h-3.5 text-[#F26522]" />
+              <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
             </button>
 
             {/* User Auth or Sign-in */}
@@ -121,17 +144,17 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#0c1a40] text-[#08143A] dark:text-white hover:border-[#F26522] transition-colors"
+                  className="h-9 px-3 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#1d3575] bg-slate-100/80 dark:bg-[#0c1a40] text-slate-800 dark:text-slate-200 hover:border-[#F26522] transition-colors flex items-center gap-2 shadow-xs whitespace-nowrap"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#19398A] text-white flex items-center justify-center text-xs font-black">
+                  <div className="w-5 h-5 rounded-full bg-[#19398A] text-white flex items-center justify-center text-[10px] font-black">
                     {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
                   </div>
-                  <span className="max-w-[100px] truncate text-xs">{user.displayName || user.email}</span>
+                  <span className="max-w-[85px] truncate text-xs">{user.displayName || user.email}</span>
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] shadow-xl py-2 z-50 text-xs">
-                    <div className="px-4 py-2 border-b border-[#cbd9ec] dark:border-[#1d3575]">
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#0c1a40] border border-slate-200 dark:border-[#1d3575] shadow-xl py-2 z-50 text-xs">
+                    <div className="px-4 py-2 border-b border-slate-200 dark:border-[#1d3575]">
                       <p className="font-bold text-[#08143A] dark:text-white truncate">{user.displayName || 'Google User'}</p>
                       <p className="text-[#64748B] dark:text-[#94A3B8] text-[11px] truncate">{user.email}</p>
                       <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#F26522]/15 text-[#F26522]">
@@ -170,7 +193,7 @@ export default function Navbar() {
                       </Link>
                     )}
 
-                    <div className="border-t border-[#cbd9ec] dark:border-[#1d3575] mt-1 pt-1">
+                    <div className="border-t border-slate-200 dark:border-[#1d3575] mt-1 pt-1">
                       <button
                         onClick={() => {
                           signOut();
@@ -188,9 +211,9 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={signInWithGoogle}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] text-white shadow-md shadow-[#F26522]/20 transition-all hover:scale-[1.02]"
+                className="h-9 px-3.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#1d3575] bg-white dark:bg-[#071333] hover:bg-slate-50 dark:hover:bg-[#0e2154] text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-[#2b4c9e] shadow-xs transition-all flex items-center gap-2 whitespace-nowrap"
               >
-                <User className="w-3.5 h-3.5" />
+                <GoogleIcon />
                 <span>{t.nav.signIn}</span>
               </button>
             )}
@@ -198,9 +221,9 @@ export default function Navbar() {
             {/* Quick Register CTA Button */}
             <Link
               href="/register/iswampur-premier-league-2026"
-              className="hidden xl:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-[#19398A] hover:bg-[#122b6a] text-white shadow-sm border border-[#F9A01B]/40"
+              className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#F26522]/20 bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 whitespace-nowrap"
             >
-              <Trophy className="w-3.5 h-3.5 text-[#F9A01B]" />
+              <Trophy className="w-3.5 h-3.5 text-white" />
               <span>{t.nav.registerNow}</span>
             </Link>
           </div>
