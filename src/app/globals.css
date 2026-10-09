@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* IPL Official Light Mode Palette (Stadium Daylight) */
+    --bg-primary: #f0f4fa;
+    --bg-secondary: #e6eef8;
+    --card-bg: #ffffff;
+    --card-border: #cbd9ec;
+    --text-primary: #08143a;
+    --text-secondary: #273656;
+    --ipl-blue: #19398a;
+    --ipl-dark-blue: #0b1a42;
+    --ipl-orange: #f26522;
+    --ipl-gold: #f9a01b;
+    --ipl-cyan: #00a3e0;
+  }
+
+  .dark {
+    /* IPL Official Dark Mode Palette (Night Match Under Floodlights) */
+    --bg-primary: #050d24;
+    --bg-secondary: #081333;
+    --card-bg: #0d1e49;
+    --card-border: #1d3575;
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --ipl-blue: #1e4bb8;
+    --ipl-dark-blue: #06122c;
+    --ipl-orange: #f26522;
+    --ipl-gold: #f9a01b;
+    --ipl-cyan: #00b4f0;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-bengali), var(--font-inter), system-ui, -apple-system, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* High contrast readable text guarantees */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+  }
+}
+
+/* IPL Broadcast-Grade Glassmorphism Cards */
+.ipl-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 20px -2px rgba(8, 20, 58, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .ipl-card {
+  background-color: #0c1a40;
+  border: 1px solid #1a326b;
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45);
+}
+
+.ipl-card:hover {
+  border-color: #f26522;
+  box-shadow: 0 8px 30px -4px rgba(242, 101, 34, 0.2);
+}
+
+/* Official IPL Gradients */
+.ipl-gradient-fire {
+  background: linear-gradient(135deg, #f26522 0%, #f9a01b 100%);
+}
+
+.ipl-gradient-navy {
+  background: linear-gradient(135deg, #08143a 0%, #102766 50%, #19398a 100%);
+}
+
+.dark .ipl-gradient-navy {
+  background: linear-gradient(135deg, #050d24 0%, #0a1945 50%, #11286b 100%);
+}
+
+.ipl-gradient-text-gold {
+  background: linear-gradient(135deg, #f26522 0%, #f9a01b 50%, #ffc72c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ipl-gradient-text-cyan {
+  background: linear-gradient(135deg, #0072ce 0%, #00a3e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Stadium Lighting Glow */
+.stadium-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.2;
+}
+
+/* Sports Angled Ribbon */
+.sports-ribbon {
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+}
+
+/* Animations, Transitions & Hover Effects */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(242, 101, 34, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(249, 160, 27, 0.45);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* Interactive Card & Button Polish */
+button, a, input, select, textarea {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 16px 32px -8px rgba(8, 20, 58, 0.15);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(242, 101, 34, 0.2);
+}
+
+.btn-ipl {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-ipl::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+.btn-ipl:hover::after {
+  left: 100%;
+}
+.btn-ipl:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
