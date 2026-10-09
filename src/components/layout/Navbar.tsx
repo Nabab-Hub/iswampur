@@ -237,74 +237,148 @@ export default function Navbar() {
               {lang === 'bn' ? 'EN' : 'বাং'}
             </button>
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-[#08143A] dark:text-white hover:bg-[#e6eef8] dark:hover:bg-[#0d1e49]"
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 rounded-xl text-[#08143A] dark:text-white hover:bg-slate-100 dark:hover:bg-[#0d1e49] border border-slate-200 dark:border-[#1d3575]"
               aria-label="Open menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#cbd9ec] dark:border-[#1d3575] bg-white dark:bg-[#071333] px-4 pt-3 pb-6 space-y-2">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block px-3 py-2.5 rounded-lg text-base font-bold ${
-                pathname === link.href
-                  ? 'bg-[#19398A] text-white'
-                  : 'text-[#08143A] dark:text-[#CBD5E1] hover:bg-[#e6eef8] dark:hover:bg-[#0d1e49]'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {link.icon && <link.icon className="w-4 h-4 text-[#F26522]" />}
-                <span>{link.label}</span>
-              </div>
-            </Link>
-          ))}
+      {/* Mobile Right-Slide Drawer */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ${
+          mobileMenuOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'
+        }`}
+      >
+        {/* Backdrop overlay */}
+        <div
+          className={`fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-          <div className="border-t border-[#cbd9ec] dark:border-[#1d3575] pt-3">
-            {user ? (
-              <div className="space-y-2">
-                <div className="text-xs text-[#64748B] dark:text-[#94A3B8] px-3">{user.email}</div>
+        {/* Sliding drawer from right */}
+        <div
+          className={`fixed top-0 right-0 h-full w-[290px] sm:w-[320px] max-w-[85vw] bg-white dark:bg-[#071333] border-l border-slate-200 dark:border-[#1d3575] shadow-2xl z-50 flex flex-col justify-between p-5 transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1d3575]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#08143A] to-[#19398A] p-1 flex items-center justify-center border border-[#F9A01B]/40">
+                <Image
+                  src="/logo-square-web.png"
+                  alt="Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-sm text-[#08143A] dark:text-white">
+                  {lang === 'bn' ? 'ঈশ্বমপুর' : 'Iswampur'}
+                </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded font-black uppercase bg-[#F26522] text-white">
+                  IPL
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Nav links */}
+          <div className="py-4 space-y-1 overflow-y-auto flex-1">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
                 <Link
-                  href="/my-registration"
+                  key={link.href}
+                  href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 text-sm font-bold text-[#F26522]"
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    isActive
+                      ? 'bg-[#19398A] text-white shadow-xs'
+                      : link.isIPL
+                      ? 'text-[#F26522] dark:text-[#F9A01B] hover:bg-[#F26522]/10 font-extrabold'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#0d1e49]'
+                  }`}
                 >
-                  {t.nav.myRegistration}
+                  <div className="flex items-center gap-2.5">
+                    {link.icon && (
+                      <link.icon
+                        className={`w-4 h-4 ${
+                          link.isIPL ? 'text-[#F26522]' : isActive ? 'text-white' : 'text-slate-500'
+                        }`}
+                      />
+                    )}
+                    <span>{link.label}</span>
+                  </div>
+                  {link.isIPL && (
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#F26522] text-white">
+                      LIVE
+                    </span>
+                  )}
                 </Link>
-                {isAdmin && (
+              );
+            })}
+          </div>
+
+          {/* Drawer Footer Actions */}
+          <div className="pt-4 border-t border-slate-200 dark:border-[#1d3575] space-y-3">
+            {user ? (
+              <div className="space-y-2 bg-slate-50 dark:bg-[#040d21] p-3 rounded-2xl border border-slate-200/60 dark:border-[#1d3575]/60">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-[#19398A] text-white flex items-center justify-center text-xs font-black shrink-0">
+                    {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold truncate text-[#08143A] dark:text-white">
+                      {user.displayName || 'User'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
                   <Link
-                    href="/admin"
+                    href="/my-registration"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 text-sm font-bold text-[#19398A] dark:text-[#00A3E0]"
+                    className="px-2 py-1.5 rounded-lg text-center text-[11px] font-bold bg-[#19398A]/10 text-[#19398A] dark:text-[#00A3E0]"
                   >
-                    {t.nav.adminPanel}
+                    {t.nav.myRegistration}
                   </Link>
-                )}
-                {isSuperAdmin && (
-                  <Link
-                    href="/super-admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 text-sm font-bold text-[#F26522]"
-                  >
-                    {t.nav.superAdmin}
-                  </Link>
-                )}
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-2 py-1.5 rounded-lg text-center text-[11px] font-bold bg-[#F26522]/10 text-[#F26522]"
+                    >
+                      {t.nav.adminPanel}
+                    </Link>
+                  )}
+                </div>
+
                 <button
                   onClick={() => {
                     signOut();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-sm font-bold text-rose-600"
+                  className="w-full flex items-center justify-center gap-1.5 pt-1 text-[11px] font-bold text-rose-600 hover:underline"
                 >
-                  {t.nav.signOut}
+                  <LogOut className="w-3 h-3" />
+                  <span>{t.nav.signOut}</span>
                 </button>
               </div>
             ) : (
@@ -313,24 +387,39 @@ export default function Navbar() {
                   signInWithGoogle();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-[#F26522] to-[#F9A01B] text-white flex items-center justify-center gap-2 shadow-md"
+                className="w-full h-10 rounded-xl text-xs font-bold border border-slate-200 dark:border-[#1d3575] bg-slate-50 dark:bg-[#0c1a40] text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2 shadow-xs"
               >
-                <User className="w-4 h-4" />
-                {t.nav.signIn}
+                <GoogleIcon />
+                <span>{t.nav.signIn}</span>
               </button>
             )}
 
+            {/* Quick Register CTA Button */}
             <Link
               href="/register/iswampur-premier-league-2026"
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-2 w-full py-2.5 rounded-xl text-sm font-black uppercase tracking-wider bg-[#19398A] text-white flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#F26522]/20 bg-gradient-to-r from-[#F26522] to-[#F9A01B] flex items-center justify-center gap-2"
             >
-              <Trophy className="w-4 h-4 text-[#F9A01B]" />
-              {t.nav.registerNow}
+              <Trophy className="w-4 h-4 text-white" />
+              <span>{t.nav.registerNow}</span>
             </Link>
+
+            {/* Language switch */}
+            <div className="flex items-center justify-between pt-1 text-xs">
+              <span className="text-slate-500 font-medium">
+                {lang === 'bn' ? 'ভাষা নির্বাচন:' : 'Language:'}
+              </span>
+              <button
+                onClick={toggleLanguage}
+                className="px-3 py-1 rounded-lg border border-slate-200 dark:border-[#1d3575] bg-slate-100 dark:bg-[#0c1a40] font-bold text-xs flex items-center gap-1.5 text-slate-700 dark:text-slate-200"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#F26522]" />
+                <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
+              </button>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
