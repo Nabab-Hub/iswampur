@@ -46,7 +46,7 @@ export default function IPLRulesPage() {
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-[#08143A] dark:text-white">
               {lang === 'bn'
-                ? 'ইস্বামপুর প্রিমিয়ার লীগ ২০২৬ - টুর্নামেন্ট নিয়মাবলী'
+                ? 'ঈশ্বমপুর প্রিমিয়ার লীগ ২০২৬ - টুর্নামেন্ট নিয়মাবলী'
                 : 'Iswampur Premier League 2026 - Official Rules'}
             </h1>
             <p className="text-xs sm:text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold">

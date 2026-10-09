@@ -60,7 +60,7 @@ export default function AdminEventsPage() {
     setFullDescEn('');
     setCategory('cricket');
     setStartDate(new Date().toISOString().slice(0, 10));
-    setVenueBn('ইস্বামপুর কেন্দ্রীয় খেলার মাঠ');
+    setVenueBn('ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ');
     setVenueEn('Iswampur Central Sports Ground');
     setCoverImage('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80');
     setRegistrationEnabled(true);

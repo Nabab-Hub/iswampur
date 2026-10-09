@@ -64,7 +64,7 @@ export default function Navbar() {
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-lg sm:text-xl tracking-tight text-[#08143A] dark:text-white group-hover:text-[#F26522] transition-colors">
-                  {lang === 'bn' ? 'ইস্বামপুর' : 'Iswampur'}
+                  {lang === 'bn' ? 'ঈশ্বমপুর' : 'Iswampur'}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase bg-[#F26522] text-white">
                   IPL

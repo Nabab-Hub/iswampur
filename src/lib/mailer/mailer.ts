@@ -76,7 +76,7 @@ export async function sendRegistrationReceivedEmail(
 ): Promise<boolean> {
   const isBn = reg.language === 'bn';
   const subject = isBn
-    ? `[ইস্বামপুর প্রিমিয়ার লীগ] আপনার দল নিবন্ধন আবেদন জমা হয়েছে (${reg.team.name})`
+    ? `[ঈশ্বমপুর প্রিমিয়ার লীগ] আপনার দল নিবন্ধন আবেদন জমা হয়েছে (${reg.team.name})`
     : `[Iswampur Premier League] Squad Registration Received (${reg.team.name})`;
 
   const trackUrl = `${siteUrl}/my-registration?id=${reg.id}`;
@@ -164,7 +164,7 @@ export async function sendRegistrationReceivedEmail(
         <!-- Footer -->
         <tr>
           <td style="padding: 20px 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1d3575; background-color: #050D24;">
-            <p style="margin: 0; color: #94a3b8; font-weight: bold;">ইস্বামপুর স্পোর্টস অ্যান্ড কালচারাল কমিটি | আইপিএল ২০২৬</p>
+            <p style="margin: 0; color: #94a3b8; font-weight: bold;">ঈশ্বমপুর স্পোর্টস অ্যান্ড কালচারাল কমিটি | আইপিএল ২০২৬</p>
             <p style="margin: 4px 0 0 0;">Iswampur Central Sports Ground, Iswampur Village</p>
             <p style="margin: 4px 0 0 0; color: #475569;">This is an automated tournament system notification. Please do not reply directly to this message.</p>
           </td>
@@ -280,7 +280,7 @@ export async function sendApprovalEmail(
             <p style="color: #cbd5e1;">
               ${
                 isBn
-                  ? `ইস্বামপুর স্পোর্টস কমিটির পক্ষ থেকে আপনাকে ও আপনার দল <strong style="color: #ffffff;">"${reg.team.name}"</strong>-কে আন্তরিক অভিনন্দন! আপনার পেমেন্ট ও খেলোয়াড় তালিকা সফলভাবে অনুমোদিত হয়েছে।`
+                  ? `ঈশ্বমপুর স্পোর্টস কমিটির পক্ষ থেকে আপনাকে ও আপনার দল <strong style="color: #ffffff;">"${reg.team.name}"</strong>-কে আন্তরিক অভিনন্দন! আপনার পেমেন্ট ও খেলোয়াড় তালিকা সফলভাবে অনুমোদিত হয়েছে।`
                   : `Hearty congratulations from the Iswampur Sports Committee! Your team registration and roster for <strong style="color: #ffffff;">"${reg.team.name}"</strong> have been officially approved.`
               }
             </p>
@@ -347,7 +347,7 @@ export async function sendApprovalEmail(
         <!-- Footer -->
         <tr>
           <td style="padding: 20px 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1d3575; background-color: #050D24;">
-            <p style="margin: 0; color: #94a3b8; font-weight: bold;">ইস্বামপুর গ্রাম স্পোর্টস অ্যান্ড কালচারাল কমিটি | আইপিএল ২০২৬</p>
+            <p style="margin: 0; color: #94a3b8; font-weight: bold;">ঈশ্বমপুর গ্রাম স্পোর্টস অ্যান্ড কালচারাল কমিটি | আইপিএল ২০২৬</p>
             <p style="margin: 4px 0 0 0;">Official Ground Check-In System | Iswampur Digital Platform</p>
           </td>
         </tr>

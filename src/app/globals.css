@@ -184,3 +184,32 @@ button, a, input, select, textarea {
   filter: brightness(1.08);
 }
 
+/* Custom Scrollbar (Full Website) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #F26522 0%, #F9A01B 100%);
+  border-radius: 9999px;
+  border: 2px solid var(--bg-primary);
+  transition: all 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff7e42 0%, #ffb13b 100%);
+  box-shadow: 0 0 12px rgba(242, 101, 34, 0.6);
+}
+
+/* Firefox standard scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #F26522 var(--bg-primary);
+}
+
+

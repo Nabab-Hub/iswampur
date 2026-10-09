@@ -34,11 +34,11 @@ export async function POST(
 
       const event = await repository.getEventBySlug(reg.eventId);
       const eventTitle = event?.title || {
-        bn: 'ইস্বামপুর প্রিমিয়ার লীগ ২০২৬',
+        bn: 'ঈশ্বমপুর প্রিমিয়ার লীগ ২০২৬',
         en: 'Iswampur Premier League 2026',
       };
       const venue = event?.venue || {
-        bn: 'ইস্বামপুর কেন্দ্রীয় খেলার মাঠ',
+        bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ',
         en: 'Iswampur Central Sports Ground',
       };
 

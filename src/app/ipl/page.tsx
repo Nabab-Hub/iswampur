@@ -53,7 +53,7 @@ export default function IPLHomePage() {
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
                   {lang === 'bn' ? (
                     <>
-                      ইস্বামপুর <span className="ipl-gradient-text-gold">প্রিমিয়ার লীগ ২০২৬</span>
+                      ঈশ্বমপুর <span className="ipl-gradient-text-gold">প্রিমিয়ার লীগ ২০২৬</span>
                     </>
                   ) : (
                     <>
@@ -64,7 +64,7 @@ export default function IPLHomePage() {
 
                 <p className="text-[#CBD5E1] text-base sm:text-lg leading-relaxed font-normal">
                   {lang === 'bn'
-                    ? 'ঐতিহ্যবাহী ইস্বামপুর গ্রামের বার্ষিক টেনিস বল ক্রিকেট মহাযজ্ঞ। ১৬টি সেরা দলের তীব্র প্রতিদ্বন্দ্বিতা, অনলাইন দল নিবন্ধন ও ডিজিটাল ভেরিফাইড কিউআর পাস।'
+                    ? 'ঐতিহ্যবাহী ঈশ্বমপুর গ্রামের বার্ষিক টেনিস বল ক্রিকেট মহাযজ্ঞ। ১৬টি সেরা দলের তীব্র প্রতিদ্বন্দ্বিতা, অনলাইন দল নিবন্ধন ও ডিজিটাল ভেরিফাইড কিউআর পাস।'
                     : 'The historic annual tennis ball cricket extravaganza of Iswampur village. 16 champion squads, online team registration, and digitally verified QR passes.'}
                 </p>
 
@@ -160,7 +160,7 @@ export default function IPLHomePage() {
                 {lang === 'bn' ? 'হাইস্কুল কেন্দ্রীয় মাঠ' : 'High School Ground'}
               </p>
               <p className="text-xs text-[#273656] dark:text-[#CBD5E1] font-semibold">
-                {lang === 'bn' ? 'ইস্বামপুর পঞ্চায়েত এলাকা' : 'Iswampur Area'}
+                {lang === 'bn' ? 'ঈশ্বমপুর পঞ্চায়েত এলাকা' : 'Iswampur Area'}
               </p>
             </div>
           </div>

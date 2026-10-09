@@ -31,7 +31,7 @@ const INITIAL_ADMIN_EMAIL = 'jonsknabab@gmail.com';
 
 const DEFAULT_SETTINGS: SiteSettings = {
   siteName: {
-    bn: 'ইস্বামপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম',
+    bn: 'ঈশ্বমপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম',
     en: 'Iswampur Village Digital Platform',
   },
   logoUrl: '/images/iswampur-logo.svg',
@@ -40,18 +40,18 @@ const DEFAULT_SETTINGS: SiteSettings = {
     en: 'Heritage, Harmony, Sports and Digital Progress',
   },
   aboutText: {
-    bn: 'ইস্বামপুর একটি ঐতিহ্যবাহী ও ভ্রাতৃত্বপূর্ণ গ্রাম। প্রতি বছর এখানে আয়োজিত হয় বিখ্যাত ইস্বামপুর প্রিমিয়ার লীগ (IPL), জাতীয় দিবস পালন এবং নানান সাংস্কৃতিক ও সামাজিক মহোৎসব। এই ডিজিটাল প্ল্যাটফর্মের মাধ্যমে সকল তথ্য, ছবি এবং অনলাইন দল নিবন্ধন পরিচালনা করা হয়।',
+    bn: 'ঈশ্বমপুর একটি ঐতিহ্যবাহী ও ভ্রাতৃত্বপূর্ণ গ্রাম। প্রতি বছর এখানে আয়োজিত হয় বিখ্যাত ঈশ্বমপুর প্রিমিয়ার লীগ (IPL), জাতীয় দিবস পালন এবং নানান সাংস্কৃতিক ও সামাজিক মহোৎসব। এই ডিজিটাল প্ল্যাটফর্মের মাধ্যমে সকল তথ্য, ছবি এবং অনলাইন দল নিবন্ধন পরিচালনা করা হয়।',
     en: 'Iswampur is a vibrant and close-knit community. Every year we host the prestigious Iswampur Premier League (IPL) cricket tournament, national celebrations, and various cultural festivals. This platform serves as our central hub for events, memories, and registrations.',
   },
   aboutHistory: {
-    bn: 'সবুজ শ্যামল প্রান্তর ও ভ্রাতৃত্ববোধের ঐতিহ্য নিয়ে আমাদের ইস্বামপুর গ্রাম যুগে যুগে সামাজিক সংহতি এবং ক্রীড়ামোদী তারুণ্যের এক অনন্য নিদর্শন স্থাপন করেছে।',
+    bn: 'সবুজ শ্যামল প্রান্তর ও ভ্রাতৃত্ববোধের ঐতিহ্য নিয়ে আমাদের ঈশ্বমপুর গ্রাম যুগে যুগে সামাজিক সংহতি এবং ক্রীড়ামোদী তারুণ্যের এক অনন্য নিদর্শন স্থাপন করেছে।',
     en: 'Nestled amidst lush landscapes, Iswampur stands as a beacon of unity, rich cultural heritage, and passionate athletic spirit.',
   },
   contact: {
     email: 'contact@iswampur.org',
     phone: '+91 98765 43210',
     address: {
-      bn: 'ইস্বামপুর গ্রাম, পোস্ট: ইস্বামপুর, থানা: পঞ্চায়েত এলাকা, পশ্চিমবঙ্গ, ভারত',
+      bn: 'ঈশ্বমপুর গ্রাম, পোস্ট: ঈশ্বমপুর, থানা: পঞ্চায়েত এলাকা, পশ্চিমবঙ্গ, ভারত',
       en: 'Iswampur Village, PO: Iswampur, West Bengal, India',
     },
   },
@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     whatsapp: 'https://whatsapp.com',
   },
   footerCopyright: {
-    bn: '© ২০২৬ ইস্বামপুর গ্রাম ডিজিটাল কমিটি। সর্বস্বত্ব সংরক্ষিত।',
+    bn: '© ২০২৬ ঈশ্বমপুর গ্রাম ডিজিটাল কমিটি। সর্বস্বত্ব সংরক্ষিত।',
     en: '© 2026 Iswampur Village Digital Committee. All rights reserved.',
   },
   payment: {
@@ -131,7 +131,7 @@ const DEFAULT_SEASONS: IPLSeason[] = [
     id: 'ipl-2026',
     slug: 'iswampur-premier-league-2026',
     name: {
-      bn: 'ইস্বামপুর প্রিমিয়ার লীগ ২০২৬ (IPL-10)',
+      bn: 'ঈশ্বমপুর প্রিমিয়ার লীগ ২০২৬ (IPL-10)',
       en: 'Iswampur Premier League 2026 (IPL Season 10)',
     },
     year: 2026,
@@ -139,7 +139,7 @@ const DEFAULT_SEASONS: IPLSeason[] = [
     registrationDeadline: '2026-11-15T23:59:59.000Z',
     eventDate: '২০-২৫ ডিসেম্বর, ২০২৬',
     venue: {
-      bn: 'ইস্বামপুর হাইস্কুল সংলগ্ন কেন্দ্রীয় খেলার মাঠ',
+      bn: 'ঈশ্বমপুর হাইস্কুল সংলগ্ন কেন্দ্রীয় খেলার মাঠ',
       en: 'Iswampur High School Central Sports Ground',
     },
     registrationFee: 1500,
@@ -160,7 +160,7 @@ const DEFAULT_EVENTS: VillageEvent[] = [
     id: 'event-ipl-2026',
     slug: 'iswampur-premier-league-2026',
     title: {
-      bn: 'ইস্বামপুর প্রিমিয়ার লীগ ২০২৬ (দশম বর্ষ)',
+      bn: 'ঈশ্বমপুর প্রিমিয়ার লীগ ২০২৬ (দশম বর্ষ)',
       en: 'Iswampur Premier League 2026 (10th Edition)',
     },
     shortDescription: {
@@ -168,14 +168,14 @@ const DEFAULT_EVENTS: VillageEvent[] = [
       en: 'The biggest annual cricket extravaganza featuring 16 champion village teams!',
     },
     fullDescription: {
-      bn: 'ইস্বামপুর প্রিমিয়ার লীগ এবার পা রাখছে তার গৌরবময় দশম বর্ষে। গ্রামের উদীয়মান তরুণ ও অভিজ্ঞ ক্রিকেট তারকাদের মেলবন্ধনে আয়োজিত হতে চলেছে এক অভূতপূর্ব ক্রিকেট মহোৎসব। অনলাইনে দল নিবন্ধনের মাধ্যমে অংশ নিন।',
+      bn: 'ঈশ্বমপুর প্রিমিয়ার লীগ এবার পা রাখছে তার গৌরবময় দশম বর্ষে। গ্রামের উদীয়মান তরুণ ও অভিজ্ঞ ক্রিকেট তারকাদের মেলবন্ধনে আয়োজিত হতে চলেছে এক অভূতপূর্ব ক্রিকেট মহোৎসব। অনলাইনে দল নিবন্ধনের মাধ্যমে অংশ নিন।',
       en: 'The prestigious Iswampur Premier League enters its landmark 10th edition. Bringing together village sports heroes in an electrifying atmosphere.',
     },
     category: 'cricket',
     startDate: '2026-12-20',
     endDate: '2026-12-25',
     venue: {
-      bn: 'ইস্বামপুর কেন্দ্রীয় খেলার মাঠ',
+      bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ',
       en: 'Iswampur Central Sports Ground',
     },
     coverImage: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80',
@@ -226,13 +226,13 @@ const DEFAULT_EVENTS: VillageEvent[] = [
       en: 'Flag hoisting ceremony, youth marathon, and cultural programs honoring 15 August.',
     },
     fullDescription: {
-      bn: 'ইস্বামপুর প্রাইমারি স্কুল প্রাঙ্গণে সকাল ৮টায় জাতীয় পতাকা উত্তোলনের মাধ্যমে অনুষ্ঠান শুরু হবে। এরপর অনুষ্ঠিত হবে শিশুদের চিত্রাঙ্কন ও ম্যারাথন।',
+      bn: 'ঈশ্বমপুর প্রাইমারি স্কুল প্রাঙ্গণে সকাল ৮টায় জাতীয় পতাকা উত্তোলনের মাধ্যমে অনুষ্ঠান শুরু হবে। এরপর অনুষ্ঠিত হবে শিশুদের চিত্রাঙ্কন ও ম্যারাথন।',
       en: 'The celebration starts with national flag hoisting at 8:00 AM followed by cultural recitals and community athletics.',
     },
     category: 'national_day',
     startDate: '2026-08-15',
     venue: {
-      bn: 'ইস্বামপুর স্কুল প্রাঙ্গণ ও ক্লাব ঘর',
+      bn: 'ঈশ্বমপুর স্কুল প্রাঙ্গণ ও ক্লাব ঘর',
       en: 'Iswampur Primary School Grounds',
     },
     coverImage: 'https://images.unsplash.com/photo-1532375810709-75b1da00537c?auto=format&fit=crop&w=1200&q=80',
@@ -263,7 +263,7 @@ const DEFAULT_EVENTS: VillageEvent[] = [
     category: 'cultural',
     startDate: '2026-10-22',
     venue: {
-      bn: 'ইস্বামপুর সার্বজনীন নাটমন্দির মঞ্চ',
+      bn: 'ঈশ্বমপুর সার্বজনীন নাটমন্দির মঞ্চ',
       en: 'Iswampur Community Stage',
     },
     coverImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
@@ -303,7 +303,7 @@ const DEFAULT_POSTS: PostAnnouncement[] = [
       en: 'Central ground maintenance and turf pitch preparation completed',
     },
     content: {
-      bn: 'ইস্বামপুর হাইস্কুল মাঠের কিউরেটর দল পিচ ও আউটফিল্ডের সার্বিক উন্নয়ন কাজ সফলভাবে শেষ করেছেন।',
+      bn: 'ঈশ্বমপুর হাইস্কুল মাঠের কিউরেটর দল পিচ ও আউটফিল্ডের সার্বিক উন্নয়ন কাজ সফলভাবে শেষ করেছেন।',
       en: 'The grounds committee has successfully prepared the tournament pitch and outfield.',
     },
     category: 'notice',
@@ -344,8 +344,8 @@ class DataStore {
       termsAcceptedAt: new Date().toISOString(),
       termsVersion: '2026.1',
       team: {
-        name: 'ইস্বামপুর ওয়ারিয়র্স (Iswampur Warriors)',
-        address: 'পশ্চিম পাড়া, ইস্বামপুর',
+        name: 'ঈশ্বমপুর ওয়ারিয়র্স (Iswampur Warriors)',
+        address: 'পশ্চিম পাড়া, ঈশ্বমপুর',
         representativeName: 'রাহুল মন্ডল',
         email: 'team.warriors@gmail.com',
         phone: '9876543210',
@@ -384,22 +384,22 @@ class DataStore {
       registrationId: sampleRegId,
       eventId: 'event-ipl-2026',
       eventTitle: {
-        bn: 'ইস্বামপুর প্রিমিয়ার লীগ ২০২৬ (IPL-10)',
+        bn: 'ঈশ্বমপুর প্রিমিয়ার লীগ ২০২৬ (IPL-10)',
         en: 'Iswampur Premier League 2026 (IPL Season 10)',
       },
-      teamName: 'ইস্বামপুর ওয়ারিয়র্স (Iswampur Warriors)',
+      teamName: 'ঈশ্বমপুর ওয়ারিয়র্স (Iswampur Warriors)',
       representativeName: 'রাহুল মন্ডল',
       memberCount: 11,
       issuedAt: new Date().toISOString(),
       status: 'ACTIVE',
       venue: {
-        bn: 'ইস্বামপুর কেন্দ্রীয় খেলার মাঠ',
+        bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ',
         en: 'Iswampur Central Sports Ground',
       },
       eventDate: '২০-২৫ ডিসেম্বর, ২০২৬',
       signature: require('crypto')
         .createHmac('sha256', process.env.PASS_SIGNING_SECRET || 'iswampur_secret_default_signing_key_2026')
-        .update(`${samplePassId}:${sampleRegId}:ইস্বামপুর ওয়ারিয়র্স (Iswampur Warriors):event-ipl-2026`)
+        .update(`${samplePassId}:${sampleRegId}:ঈশ্বমপুর ওয়ারিয়র্স (Iswampur Warriors):event-ipl-2026`)
         .digest('hex'),
     });
   }

@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
           </h1>
           <p className="text-xs sm:text-sm text-[#273656] dark:text-[#CBD5E1] mt-1 font-semibold">
             {lang === 'bn'
-              ? 'ইস্বামপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম ও আইপিএল ২০২৬ রিয়েল-টাইম তথ্য ও পরিসংখ্যান।'
+              ? 'ঈশ্বমপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম ও আইপিএল ২০২৬ রিয়েল-টাইম তথ্য ও পরিসংখ্যান।'
               : 'Real-time overview, tournament statistics, and registrations for Iswampur.'}
           </p>
         </div>

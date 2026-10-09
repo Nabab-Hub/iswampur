@@ -19,22 +19,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'ইস্বামপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম | Iswampur Village Events & IPL',
+  title: 'ঈশ্বমপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম | Iswampur Village Events & IPL',
   description:
-    'ইস্বামপুর গ্রামের সকল অনুষ্ঠান, মেলা, সাংস্কৃতিক উৎসব ও বার্ষিক ইস্বামপুর প্রিমিয়ার লীগ (IPL) এর অফিসিয়াল অনলাইন পোর্টাল।',
+    'ঈশ্বমপুর গ্রামের সকল অনুষ্ঠান, মেলা, সাংস্কৃতিক উৎসব ও বার্ষিক ঈশ্বমপুর প্রিমিয়ার লীগ (IPL) এর অফিসিয়াল অনলাইন পোর্টাল।',
   keywords: [
     'Iswampur',
     'Iswampur Premier League',
     'IPL 2026',
-    'ইস্বামপুর',
-    'ইস্বামপুর প্রিমিয়ার লীগ',
+    'ঈশ্বমপুর',
+    'ঈশ্বমপুর প্রিমিয়ার লীগ',
     'Village Events',
     'Cricket Tournament',
   ],
   authors: [{ name: 'Iswampur Digital Committee' }],
   openGraph: {
-    title: 'ইস্বামপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম | Iswampur Village Platform',
-    description: 'অনুষ্ঠান, উৎসব ও ইস্বামপুর প্রিমিয়ার লীগ অনলাইন দল নিবন্ধন পোর্টাল।',
+    title: 'ঈশ্বমপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম | Iswampur Village Platform',
+    description: 'অনুষ্ঠান, উৎসব ও ঈশ্বমপুর প্রিমিয়ার লীগ অনলাইন দল নিবন্ধন পোর্টাল।',
     type: 'website',
     locale: 'bn_IN',
   },

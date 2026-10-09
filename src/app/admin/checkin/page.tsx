@@ -68,14 +68,13 @@ export default function MatchdayCheckinPage() {
 
   // Initialize and manage camera QR scanner
   const startCameraScanner = async () => {
+    if (scanning) return;
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
       if (scannerRef.current) {
-        try {
-          await scannerRef.current.stop();
-        } catch {}
+        await stopCameraScanner();
       }
 
+      const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode(qrRegionId);
       scannerRef.current = html5QrCode;
 
@@ -95,24 +94,27 @@ export default function MatchdayCheckinPage() {
       setScanning(true);
     } catch (err: any) {
       console.error('Camera start error:', err);
+      await stopCameraScanner();
       alert(
         lang === 'bn'
           ? 'ক্যামেরা চালু করতে সমস্যা হয়েছে। ক্যামেরা পারমিশন দেওয়া আছে কিনা দেখুন।'
           : 'Failed to access camera. Please allow camera permissions in your browser.'
       );
-      setScanning(false);
     }
   };
 
   const stopCameraScanner = async () => {
     if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (err) {
-        console.error('Camera stop error:', err);
-      }
+      const scanner = scannerRef.current;
       scannerRef.current = null;
+      try {
+        if (scanner.isScanning) {
+          await scanner.stop();
+        }
+        await scanner.clear();
+      } catch (err: any) {
+        // Suppress transient play() interruption / clear errors
+      }
     }
     setScanning(false);
   };
@@ -120,8 +122,13 @@ export default function MatchdayCheckinPage() {
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
+        const scanner = scannerRef.current;
+        scannerRef.current = null;
         try {
-          scannerRef.current.stop();
+          if (scanner.isScanning) {
+            scanner.stop().catch(() => {});
+          }
+          scanner.clear();
         } catch {}
       }
     };
@@ -155,6 +162,9 @@ export default function MatchdayCheckinPage() {
       const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode('file-qr-temp');
       const decodedText = await html5QrCode.scanFile(file, true);
+      try {
+        html5QrCode.clear();
+      } catch {}
       handleScannedCode(decodedText);
     } catch (err) {
       console.error('File scan error:', err);
@@ -165,6 +175,9 @@ export default function MatchdayCheckinPage() {
             ? 'ছবিতে কোনো বৈধ কিউআর কোড পাওয়া যায়নি। অনুগ্রহ করে পরিষ্কার ছবি নির্বাচন করুন।'
             : 'No valid QR code detected in this image. Please select a clearer image.',
       });
+    } finally {
+      // Clear input so same file can be re-scanned if desired
+      e.target.value = '';
     }
   };
 
@@ -314,48 +327,50 @@ export default function MatchdayCheckinPage() {
               </div>
             </div>
 
-            {/* Camera Viewport */}
-            {scanMode === 'camera' && (
-              <div className="space-y-4">
-                <div
-                  id={qrRegionId}
-                  className="w-full min-h-[260px] bg-slate-950 rounded-2xl overflow-hidden flex flex-col items-center justify-center text-slate-400 border border-slate-800 relative"
-                >
-                  {!scanning && (
-                    <div className="text-center p-6 space-y-2">
-                      <Camera className="w-12 h-12 mx-auto text-slate-600" />
-                      <p className="text-xs text-slate-400 font-medium">
-                        {lang === 'bn'
-                          ? 'ক্যামেরা চালু করতে নিচের বাটনে চাপ দিন'
-                          : 'Click button below to activate live camera'}
-                      </p>
-                    </div>
-                  )}
-                </div>
+            {/* Persistent Hidden Container for File Scanning */}
+            <div id="file-qr-temp" className="hidden" aria-hidden="true" />
 
-                <div className="flex gap-2">
-                  {!scanning ? (
-                    <button
-                      type="button"
-                      onClick={startCameraScanner}
-                      className="w-full py-3 rounded-xl font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-blue-500/20 hover:scale-[1.02]"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>{lang === 'bn' ? 'লাইভ ক্যামেরা স্ক্যানার চালু করুন' : 'Start Live Camera Scanner'}</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={stopCameraScanner}
-                      className="w-full py-3 rounded-xl font-black text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-rose-500/20"
-                    >
-                      <CameraOff className="w-4 h-4" />
-                      <span>{lang === 'bn' ? 'ক্যামেরা বন্ধ করুন' : 'Stop Camera'}</span>
-                    </button>
-                  )}
-                </div>
+            {/* Camera Viewport (kept mounted in DOM with CSS visibility to prevent video aborts) */}
+            <div className={scanMode === 'camera' ? 'space-y-4' : 'hidden'}>
+              <div className="relative w-full min-h-[260px] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                {/* Dedicated mount target for Html5Qrcode - zero React children inside */}
+                <div id={qrRegionId} className="w-full h-full min-h-[260px]" />
+
+                {/* React-controlled overlay shown when camera is idle */}
+                {!scanning && (
+                  <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 space-y-2 pointer-events-none z-10">
+                    <Camera className="w-12 h-12 mx-auto text-slate-600" />
+                    <p className="text-xs text-slate-400 font-medium text-center">
+                      {lang === 'bn'
+                        ? 'ক্যামেরা চালু করতে নিচের বাটনে চাপ দিন'
+                        : 'Click button below to activate live camera'}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="flex gap-2">
+                {!scanning ? (
+                  <button
+                    type="button"
+                    onClick={startCameraScanner}
+                    className="w-full py-3 rounded-xl font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-blue-500/20 hover:scale-[1.02]"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>{lang === 'bn' ? 'লাইভ ক্যামেরা স্ক্যানার চালু করুন' : 'Start Live Camera Scanner'}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={stopCameraScanner}
+                    className="w-full py-3 rounded-xl font-black text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-rose-500/20"
+                  >
+                    <CameraOff className="w-4 h-4" />
+                    <span>{lang === 'bn' ? 'ক্যামেরা বন্ধ করুন' : 'Stop Camera'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* File Upload Scan */}
             {scanMode === 'file' && (

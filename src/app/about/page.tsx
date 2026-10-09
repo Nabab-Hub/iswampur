@@ -20,7 +20,7 @@ export default function AboutPage() {
               <span>{lang === 'bn' ? 'গ্রামের পরিচয় ও গৌরবময় ইতিহাস' : 'HERITAGE & HISTORY'}</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#08143A] dark:text-white">
-              {lang === 'bn' ? 'ঐতিহ্যবাহী ইস্বামপুর গ্রাম' : 'Historic Iswampur Village'}
+              {lang === 'bn' ? 'ঐতিহ্যবাহী ঈশ্বমপুর গ্রাম' : 'Historic Iswampur Village'}
             </h1>
             <p className="text-base text-[#273656] dark:text-[#CBD5E1] font-semibold">
               {lang === 'bn'
@@ -38,7 +38,7 @@ export default function AboutPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#08143A]/95 via-transparent to-transparent flex items-end p-8">
               <p className="text-white font-black text-lg sm:text-xl drop-shadow">
                 {lang === 'bn'
-                  ? 'ঐতিহ্য, সম্প্রীতি ও ডিজিটাল অগ্রযাত্রায় আমাদের ইস্বামপুর'
+                  ? 'ঐতিহ্য, সম্প্রীতি ও ডিজিটাল অগ্রযাত্রায় আমাদের ঈশ্বমপুর'
                   : 'Tradition, Brotherhood & Digital Innovation in Iswampur'}
               </p>
             </div>
@@ -51,12 +51,12 @@ export default function AboutPage() {
             <div className="space-y-4 text-[#273656] dark:text-[#CBD5E1] leading-relaxed text-base font-medium">
               <p>
                 {lang === 'bn'
-                  ? 'ইস্বামপুর একটি ঐতিহ্যবাহী গ্রাম, যেখানে যুগ যুগ ধরে সকল ধর্ম ও বর্ণের মানুষ ভ্রাতৃত্ব ও সৌহার্দ্যের সাথে বসবাস করে আসছেন। খেলাধুলা, সাংস্কৃতিক অনুষ্ঠান এবং বিভিন্ন সামাজিক উৎসবের মাধ্যমে আমাদের গ্রামবাসীরা একতাবদ্ধ।'
+                  ? 'ঈশ্বমপুর একটি ঐতিহ্যবাহী গ্রাম, যেখানে যুগ যুগ ধরে সকল ধর্ম ও বর্ণের মানুষ ভ্রাতৃত্ব ও সৌহার্দ্যের সাথে বসবাস করে আসছেন। খেলাধুলা, সাংস্কৃতিক অনুষ্ঠান এবং বিভিন্ন সামাজিক উৎসবের মাধ্যমে আমাদের গ্রামবাসীরা একতাবদ্ধ।'
                   : 'Iswampur is a time-honored village renowned for unity, peace, and brotherhood across generations. Sports tournaments, national commemorations, and traditional festivals bind our community closely.'}
               </p>
               <p>
                 {lang === 'bn'
-                  ? 'প্রতি বছর আয়োজিত "ইস্বামপুর প্রিমিয়ার লীগ" (IPL) আমাদের যুব সমাজ ও ক্রীড়ামোদী মানুষের সবচেয়ে বড় আকর্ষণ। এছাড়া ২৬শে জানুয়ারি, ১৫ই আগস্ট ও শারদীয় দুর্গোৎসবে গ্রাম কমিটি এক হয়ে কাজ করে।'
+                  ? 'প্রতি বছর আয়োজিত "ঈশ্বমপুর প্রিমিয়ার লীগ" (IPL) আমাদের যুব সমাজ ও ক্রীড়ামোদী মানুষের সবচেয়ে বড় আকর্ষণ। এছাড়া ২৬শে জানুয়ারি, ১৫ই আগস্ট ও শারদীয় দুর্গোৎসবে গ্রাম কমিটি এক হয়ে কাজ করে।'
                   : 'The annual Iswampur Premier League (IPL) cricket championship is our greatest youth and sporting festival, complemented by proud celebrations of Independence Day, Republic Day, and cultural Pujas.'}
               </p>
             </div>

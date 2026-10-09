@@ -1,5 +1,5 @@
 # 🌾 Iswampur Digital Platform & IPL Tournament Management System
-> **ইস্বামপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম ও প্রিমিয়ার লীগ (IPL)**
+> **ঈশ্বমপুর গ্রাম ডিজিটাল প্ল্যাটফর্ম ও প্রিমিয়ার লীগ (IPL)**
 
 A production-ready, full-stack, bilingual (Bengali default / English toggle) web application and community CMS for **Iswampur**, featuring the annual **Iswampur Premier League (IPL)** cricket tournament management system, dynamic event registration engine, administrative RBAC, cryptographically signed team passes, and real-time QR verification.
 

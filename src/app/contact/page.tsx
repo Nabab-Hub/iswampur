@@ -50,7 +50,7 @@ export default function ContactPage() {
             </h1>
             <p className="text-sm sm:text-base text-[#273656] dark:text-[#CBD5E1] font-semibold">
               {lang === 'bn'
-                ? 'ইস্বামপুর গ্রাম ডিজিটাল কমিটি বা টুর্নামেন্ট পরিচালনা দলের সাথে যেকোনো প্রয়োজনে যোগাযোগ করুন।'
+                ? 'ঈশ্বমপুর গ্রাম ডিজিটাল কমিটি বা টুর্নামেন্ট পরিচালনা দলের সাথে যেকোনো প্রয়োজনে যোগাযোগ করুন।'
                 : 'Reach out to the Iswampur Village Digital Committee or tournament organizers for any questions.'}
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function ContactPage() {
                 </h3>
                 <p className="text-xs sm:text-sm text-[#273656] dark:text-[#CBD5E1] font-medium">
                   {lang === 'bn'
-                    ? 'ইস্বামপুর গ্রাম, পোস্ট: ইস্বামপুর, থানা এলাকা, পশ্চিমবঙ্গ, ভারত'
+                    ? 'ঈশ্বমপুর গ্রাম, পোস্ট: ঈশ্বমপুর, থানা এলাকা, পশ্চিমবঙ্গ, ভারত'
                     : 'Iswampur Village, PO: Iswampur, West Bengal, India'}
                 </p>
               </div>

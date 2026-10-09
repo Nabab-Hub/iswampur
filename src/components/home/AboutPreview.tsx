@@ -19,12 +19,12 @@ export default function AboutPreview() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#08143A] dark:text-white">
-              {lang === 'bn' ? 'ঐতিহ্য ও সম্প্রীতির ইস্বামপুর গ্রাম' : 'Historic & Harmonious Iswampur Village'}
+              {lang === 'bn' ? 'ঐতিহ্য ও সম্প্রীতির ঈশ্বমপুর গ্রাম' : 'Historic & Harmonious Iswampur Village'}
             </h2>
 
             <p className="text-[#273656] dark:text-[#CBD5E1] text-sm sm:text-base leading-relaxed font-medium">
               {lang === 'bn'
-                ? 'ইস্বামপুর একটি ঐতিহ্যবাহী গ্রাম, যেখানে যুগ যুগ ধরে সকল ধর্ম ও বর্ণের মানুষ ভ্রাতৃত্ব ও সৌহার্দ্যের সাথে বসবাস করে আসছেন। খেলাধুলা, সাংস্কৃতিক অনুষ্ঠান এবং বিভিন্ন সামাজিক উৎসবের মাধ্যমে আমাদের গ্রামবাসীরা একতাবদ্ধ।'
+                ? 'ঈশ্বমপুর একটি ঐতিহ্যবাহী গ্রাম, যেখানে যুগ যুগ ধরে সকল ধর্ম ও বর্ণের মানুষ ভ্রাতৃত্ব ও সৌহার্দ্যের সাথে বসবাস করে আসছেন। খেলাধুলা, সাংস্কৃতিক অনুষ্ঠান এবং বিভিন্ন সামাজিক উৎসবের মাধ্যমে আমাদের গ্রামবাসীরা একতাবদ্ধ।'
                 : 'Iswampur is a time-honored village renowned for unity, peace, and brotherhood across generations. Sports tournaments, national commemorations, and traditional festivals bind our community closely.'}
             </p>
 
@@ -84,7 +84,7 @@ export default function AboutPreview() {
                     {lang === 'bn' ? 'গ্রাম্য প্রান্তর' : 'Village Heart'}
                   </span>
                   <h3 className="text-lg sm:text-xl font-black drop-shadow">
-                    {lang === 'bn' ? 'ইস্বামপুর হাইস্কুল কেন্দ্রীয় মাঠ' : 'Iswampur High School Ground'}
+                    {lang === 'bn' ? 'ঈশ্বমপুর হাইস্কুল কেন্দ্রীয় মাঠ' : 'Iswampur High School Ground'}
                   </h3>
                 </div>
               </div>

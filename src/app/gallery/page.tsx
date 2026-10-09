@@ -21,7 +21,7 @@ export default function GalleryPage() {
               <span>{t.gallery.title}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#08143A] dark:text-white">
-              {lang === 'bn' ? 'ইস্বামপুর গ্রাম্য আলোকচিত্র সংগ্রহশালা' : 'Iswampur Village Photo Archives'}
+              {lang === 'bn' ? 'ঈশ্বমপুর গ্রাম্য আলোকচিত্র সংগ্রহশালা' : 'Iswampur Village Photo Archives'}
             </h1>
             <p className="text-sm sm:text-base text-[#273656] dark:text-[#CBD5E1] font-semibold">
               {lang === 'bn'

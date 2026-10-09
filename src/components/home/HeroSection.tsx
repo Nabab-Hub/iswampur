@@ -42,7 +42,7 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#08143A] dark:text-white leading-[1.12]">
               {lang === 'bn' ? (
                 <>
-                  স্বাগতম <span className="ipl-gradient-text-gold">ইস্বামপুর গ্রাম</span> ও প্রিমিয়ার লীগে
+                  স্বাগতম <span className="ipl-gradient-text-gold">ঈশ্বমপুর গ্রাম</span> ও প্রিমিয়ার লীগে
                 </>
               ) : (
                 <>
@@ -54,7 +54,7 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-[#273656] dark:text-[#CBD5E1] leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
               {lang === 'bn'
-                ? 'ইস্বামপুর গ্রামের ঐতিহ্যবাহী সংস্কৃতি, বার্ষিক অনুষ্ঠান এবং ইস্বামপুর প্রিমিয়ার লীগ (IPL) এর পূর্ণাঙ্গ অনলাইন নিবন্ধন ও সরাসরি ফলাফল পোর্টাল।'
+                ? 'ঈশ্বমপুর গ্রামের ঐতিহ্যবাহী সংস্কৃতি, বার্ষিক অনুষ্ঠান এবং ঈশ্বমপুর প্রিমিয়ার লীগ (IPL) এর পূর্ণাঙ্গ অনলাইন নিবন্ধন ও সরাসরি ফলাফল পোর্টাল।'
                 : 'The official digital home for Iswampur village events, rich cultural heritage, and the annual Iswampur Premier League (IPL) cricket tournament with online registration & digital team passes.'}
             </p>
 

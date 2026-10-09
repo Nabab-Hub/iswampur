@@ -29,12 +29,12 @@ export default function Footer() {
                 />
               </div>
               <span className="font-black text-xl tracking-tight text-[#08143A] dark:text-white">
-                {lang === 'bn' ? 'ইস্বামপুর গ্রাম ও প্রিমিয়ার লীগ' : 'Iswampur Village & Premier League'}
+                {lang === 'bn' ? 'ঈশ্বমপুর গ্রাম ও প্রিমিয়ার লীগ' : 'Iswampur Village & Premier League'}
               </span>
             </div>
             <p className="text-sm text-[#273656] dark:text-[#CBD5E1] max-w-md leading-relaxed font-medium">
               {lang === 'bn'
-                ? 'ইস্বামপুর গ্রামের প্রতিটি উৎসব, আনন্দময় মুহূর্ত ও বার্ষিক ক্রিকেট মহোৎসব (IPL) এর ঐক্যবদ্ধ ডিজিটাল মিলনমেলা। গ্রামের সংস্কৃতি ও পারস্পরিক সৌহার্দ্য রক্ষা করাই আমাদের ব্রত।'
+                ? 'ঈশ্বমপুর গ্রামের প্রতিটি উৎসব, আনন্দময় মুহূর্ত ও বার্ষিক ক্রিকেট মহোৎসব (IPL) এর ঐক্যবদ্ধ ডিজিটাল মিলনমেলা। গ্রামের সংস্কৃতি ও পারস্পরিক সৌহার্দ্য রক্ষা করাই আমাদের ব্রত।'
                 : 'A unified digital community platform dedicated to celebrating our village festivals, sports excellence in the Iswampur Premier League (IPL), and fostering community unity.'}
             </p>
             <div className="flex items-center gap-3 pt-2">
@@ -128,7 +128,7 @@ export default function Footer() {
                 <MapPin className="w-4 h-4 text-[#F26522] shrink-0 mt-0.5" />
                 <span>
                   {lang === 'bn'
-                    ? 'ইস্বামপুর গ্রাম, পোস্ট: ইস্বামপুর, পশ্চিমবঙ্গ, ভারত'
+                    ? 'ঈশ্বমপুর গ্রাম, পোস্ট: ঈশ্বমপুর, পশ্চিমবঙ্গ, ভারত'
                     : 'Iswampur Village, PO: Iswampur, West Bengal, India'}
                 </span>
               </div>

@@ -19,7 +19,7 @@ export default function VillageGalleryPreview({ photos }: VillageGalleryPreviewP
       id: 'g1',
       url: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=800&q=80',
       caption: {
-        bn: 'ইস্বামপুর প্রিমিয়ার লীগের ফাইনাল ম্যাচের দৃশ্য',
+        bn: 'ঈশ্বমপুর প্রিমিয়ার লীগের ফাইনাল ম্যাচের দৃশ্য',
         en: 'Grand Final match atmosphere of Iswampur Premier League',
       },
       order: 1,

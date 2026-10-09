@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div>
               <p className="font-black text-sm tracking-tight text-[#08143A] dark:text-white">
-                {lang === 'bn' ? 'ইস্বামপুর অ্যাডমিন' : 'Iswampur Admin'}
+                {lang === 'bn' ? 'ঈশ্বমপুর অ্যাডমিন' : 'Iswampur Admin'}
               </p>
               <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] font-bold uppercase tracking-wider">
                 Management Panel
@@ -180,7 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <header className="h-16 bg-white dark:bg-[#071333] border-b border-[#cbd9ec] dark:border-[#1d3575] px-6 flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-black text-[#08143A] dark:text-white">
-            {lang === 'bn' ? 'ইস্বামপুর ডিজিটাল ব্যবস্থাপনা' : 'Iswampur Village & Tournament Management'}
+            {lang === 'bn' ? 'ঈশ্বমপুর ডিজিটাল ব্যবস্থাপনা' : 'Iswampur Village & Tournament Management'}
           </h2>
           <div className="flex items-center gap-3">
             <button

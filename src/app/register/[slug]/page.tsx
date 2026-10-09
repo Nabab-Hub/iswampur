@@ -421,7 +421,7 @@ export default function RegistrationPage() {
                   <input
                     type="text"
                     required
-                    placeholder={lang === 'bn' ? 'উদাঃ ইস্বামপুর ওয়ারিয়র্স' : 'e.g. Iswampur Warriors'}
+                    placeholder={lang === 'bn' ? 'উদাঃ ঈশ্বমপুর ওয়ারিয়র্স' : 'e.g. Iswampur Warriors'}
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
@@ -435,7 +435,7 @@ export default function RegistrationPage() {
                   <input
                     type="text"
                     required
-                    placeholder={lang === 'bn' ? 'উদাঃ পশ্চিম পাড়া, ইস্বামপুর' : 'e.g. West Para, Iswampur'}
+                    placeholder={lang === 'bn' ? 'উদাঃ পশ্চিম পাড়া, ঈশ্বমপুর' : 'e.g. West Para, Iswampur'}
                     value={teamAddress}
                     onChange={(e) => setTeamAddress(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
