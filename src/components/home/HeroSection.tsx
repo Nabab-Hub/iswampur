@@ -39,7 +39,7 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
             </div>
 
             {/* Big Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#08143A] dark:text-white leading-[1.12]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#08143A] dark:text-white leading-[1.15]">
               {lang === 'bn' ? (
                 <>
                   স্বাগতম <span className="ipl-gradient-text-gold">ঈশ্বমপুর গ্রাম</span> ও প্রিমিয়ার লীগে
@@ -52,34 +52,34 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-[#273656] dark:text-[#CBD5E1] leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+            <p className="text-sm sm:text-lg text-[#273656] dark:text-[#CBD5E1] leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
               {lang === 'bn'
                 ? 'ঈশ্বমপুর গ্রামের ঐতিহ্যবাহী সংস্কৃতি, বার্ষিক অনুষ্ঠান এবং ঈশ্বমপুর প্রিমিয়ার লীগ (IPL) এর পূর্ণাঙ্গ অনলাইন নিবন্ধন ও সরাসরি ফলাফল পোর্টাল।'
                 : 'The official digital home for Iswampur village events, rich cultural heritage, and the annual Iswampur Premier League (IPL) cricket tournament with online registration & digital team passes.'}
             </p>
 
             {/* Bullet Highlights */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-1 text-xs sm:text-sm font-bold text-[#08143A] dark:text-[#CBD5E1]">
-              <div className="flex items-center gap-1.5 bg-white dark:bg-[#0c1a40] px-3 py-1.5 rounded-lg border border-[#cbd9ec] dark:border-[#1d3575]">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 pt-1 text-xs sm:text-sm font-bold text-[#08143A] dark:text-[#CBD5E1]">
+              <div className="flex items-center gap-1.5 bg-white/90 dark:bg-[#0c1a40]/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs">
                 <ShieldCheck className="w-4 h-4 text-[#F26522]" />
                 <span>{lang === 'bn' ? 'ডিজিটাল কিউআর পাস' : 'Digital QR Team Pass'}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white dark:bg-[#0c1a40] px-3 py-1.5 rounded-lg border border-[#cbd9ec] dark:border-[#1d3575]">
+              <div className="flex items-center gap-1.5 bg-white/90 dark:bg-[#0c1a40]/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs">
                 <Trophy className="w-4 h-4 text-[#F9A01B]" />
                 <span>{lang === 'bn' ? 'অনলাইন দল নিবন্ধন' : 'Online Team Registration'}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white dark:bg-[#0c1a40] px-3 py-1.5 rounded-lg border border-[#cbd9ec] dark:border-[#1d3575]">
+              <div className="flex items-center gap-1.5 bg-white/90 dark:bg-[#0c1a40]/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-[#00A3E0]" />
                 <span>{lang === 'bn' ? 'স্বচ্ছ অ্যাডমিন যাচাই' : 'Verified Review Desk'}</span>
               </div>
             </div>
 
-            {/* Primary Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-3">
+            {/* Primary Action Buttons - Clean Mobile App Layout */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-3 max-w-lg mx-auto lg:mx-0">
               {isRegistrationOpen && (
                 <Link
                   href={featuredEvent ? `/register/${featuredEvent.slug}` : '/register/iswampur-premier-league-2026'}
-                  className="px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] shadow-lg shadow-[#F26522]/25 transition-all flex items-center gap-2 group text-sm sm:text-base"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 shadow-lg shadow-[#F26522]/30 transition-all flex items-center justify-center gap-2 group text-sm sm:text-base active:scale-[0.98]"
                 >
                   <Trophy className="w-4 h-4" />
                   <span>{t.hero.registerBtn}</span>
@@ -87,21 +87,23 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
                 </Link>
               )}
 
-              <Link
-                href="/ipl"
-                className="px-6 py-3.5 rounded-xl font-extrabold text-white bg-[#19398A] hover:bg-[#122b6a] transition-all flex items-center gap-2 text-sm sm:text-base border border-[#F9A01B]/40 shadow-sm"
-              >
-                <Flame className="w-4 h-4 text-[#F9A01B]" />
-                <span>{lang === 'bn' ? 'আইপিএল হাব ও নিয়ম' : 'IPL Hub & Rules'}</span>
-              </Link>
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto">
+                <Link
+                  href="/ipl"
+                  className="px-3 sm:px-6 py-3.5 rounded-xl font-extrabold text-white bg-[#19398A] hover:bg-[#122b6a] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base border border-[#F9A01B]/40 shadow-sm active:scale-[0.98]"
+                >
+                  <Flame className="w-4 h-4 text-[#F9A01B] shrink-0" />
+                  <span className="truncate">{lang === 'bn' ? 'আইপিএল হাব ও নিয়ম' : 'IPL Hub & Rules'}</span>
+                </Link>
 
-              <Link
-                href="/events"
-                className="px-5 py-3.5 rounded-xl font-bold text-[#08143A] dark:text-white bg-white dark:bg-[#0c1a40] hover:bg-[#e6eef8] dark:hover:bg-[#102766] border border-[#cbd9ec] dark:border-[#1d3575] transition-all flex items-center gap-2 text-sm sm:text-base"
-              >
-                <Calendar className="w-4 h-4 text-[#19398A] dark:text-[#00A3E0]" />
-                <span>{t.hero.exploreEvents}</span>
-              </Link>
+                <Link
+                  href="/events"
+                  className="px-3 sm:px-5 py-3.5 rounded-xl font-bold text-[#08143A] dark:text-white bg-white dark:bg-[#0c1a40] hover:bg-[#e6eef8] dark:hover:bg-[#102766] border border-[#cbd9ec] dark:border-[#1d3575] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base active:scale-[0.98]"
+                >
+                  <Calendar className="w-4 h-4 text-[#19398A] dark:text-[#00A3E0] shrink-0" />
+                  <span className="truncate">{t.hero.exploreEvents}</span>
+                </Link>
+              </div>
             </div>
           </div>
 

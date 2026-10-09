@@ -22,21 +22,21 @@ export default function FeaturedEvents({ events }: FeaturedEventsProps) {
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F26522] dark:text-[#F9A01B]">
               <Calendar className="w-4 h-4" />
               <span>{t.events.upcoming}</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#08143A] dark:text-white">
               {t.events.title}
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl">
+            <p className="text-sm text-[#273656] dark:text-[#CBD5E1] max-w-xl font-medium">
               {t.events.subtitle}
             </p>
           </div>
 
           <Link
             href="/events"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 group"
+            className="inline-flex items-center gap-1.5 text-sm font-black text-[#19398A] dark:text-[#00A3E0] hover:text-[#F26522] dark:hover:text-[#F9A01B] transition-colors group"
           >
             <span>{t.hero.exploreEvents}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

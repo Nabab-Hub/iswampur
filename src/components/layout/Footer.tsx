@@ -145,10 +145,10 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-[#cbd9ec] dark:border-[#1d3575] mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
-          <p>{t.footer.rights}</p>
+          <p>© {lang === 'bn' ? '২০২৬' : new Date().getFullYear()} {t.footer.rights}</p>
           <div className="flex items-center gap-1.5">
             <span>Official Digital Platform of</span>
-            <span className="text-[#F26522] font-black">Iswampur Gram Committee</span>
+            <span className="text-[#F26522] font-black">{lang === 'bn' ? 'ঈশ্বমপুর গ্রাম কমিটি' : 'Iswampur Gram Committee'}</span>
           </div>
         </div>
       </div>

@@ -219,10 +219,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Mobile 3-bar hamburger button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#0c1a40] text-slate-800 dark:text-white hover:text-[#F26522] transition-colors"
+              className="md:hidden h-9 w-9 flex items-center justify-center rounded-xl bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 active:scale-95 text-white shadow-md shadow-[#F26522]/30 transition-all border border-[#F9A01B]/40"
               aria-label="Open Admin Menu"
+              title="Admin Menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 stroke-[2.75] text-white" />
             </button>
           </div>
         </header>

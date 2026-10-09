@@ -50,7 +50,7 @@ export default function Countdown({ targetDate }: CountdownProps) {
   const pad = (n: number) => n.toString().padStart(2, '0');
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center justify-center gap-1.5 sm:gap-3">
       <div className="flex flex-col items-center bg-slate-900/80 dark:bg-slate-800/90 text-white rounded-xl px-2.5 sm:px-3.5 py-1.5 shadow-md border border-slate-700/50 min-w-[50px] sm:min-w-[58px]">
         <span className="text-base sm:text-xl font-extrabold text-amber-400">{pad(timeLeft.days)}</span>
         <span className="text-[10px] uppercase font-semibold text-slate-300">{t.hero.days}</span>
