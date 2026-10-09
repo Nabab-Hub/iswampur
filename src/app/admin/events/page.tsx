@@ -393,62 +393,62 @@ export default function AdminEventsPage() {
                 </div>
 
                 {/* Registration options */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-850 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 dark:text-slate-200">
+                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-[#071333] border border-slate-200 dark:border-[#1d3575] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
                       <input
                         type="checkbox"
                         checked={registrationEnabled}
                         onChange={(e) => setRegistrationEnabled(e.target.checked)}
-                        className="rounded text-[#F26522]"
+                        className="w-4 h-4 rounded text-[#F26522] accent-[#F26522]"
                       />
                       <span>{lang === 'bn' ? 'অনলাইন দল নিবন্ধন চালু রাখুন' : 'Enable Online Team Registration'}</span>
                     </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 dark:text-slate-200">
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
                       <input
                         type="checkbox"
                         checked={showInHero}
                         onChange={(e) => setShowInHero(e.target.checked)}
-                        className="rounded text-[#F26522]"
+                        className="w-4 h-4 rounded text-[#F26522] accent-[#F26522]"
                       />
                       <span>{lang === 'bn' ? 'Homepage Hero তে প্রদর্শন করুন' : 'Show in Homepage Hero'}</span>
                     </label>
                   </div>
 
                   {registrationEnabled && (
-                    <div className="grid grid-cols-3 gap-3 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-[#1d3575]/60">
                       <div>
-                        <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                        <label className="block text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">
                           {lang === 'bn' ? 'নিবন্ধন ফি (₹)' : 'Reg Fee (₹)'}
                         </label>
                         <input
                           type="number"
                           value={registrationFee}
                           onChange={(e) => setRegistrationFee(Number(e.target.value))}
-                          className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#1d3575] bg-white dark:bg-[#0C1A40] text-slate-900 dark:text-white font-bold text-xs"
                         />
                       </div>
                       <div>
-                        <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                        <label className="block text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">
                           {lang === 'bn' ? 'নূন্যতম খেলোয়াড়' : 'Min Players'}
                         </label>
                         <input
                           type="number"
                           value={minPlayers}
                           onChange={(e) => setMinPlayers(Number(e.target.value))}
-                          className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#1d3575] bg-white dark:bg-[#0C1A40] text-slate-900 dark:text-white font-bold text-xs"
                         />
                       </div>
                       <div>
-                        <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                        <label className="block text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">
                           {lang === 'bn' ? 'সর্বোচ্চ খেলোয়াড়' : 'Max Players'}
                         </label>
                         <input
                           type="number"
                           value={maxPlayers}
                           onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                          className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#1d3575] bg-white dark:bg-[#0C1A40] text-slate-900 dark:text-white font-bold text-xs"
                         />
                       </div>
                     </div>

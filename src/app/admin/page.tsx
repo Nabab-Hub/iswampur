@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/admin/registrations"
-              className="px-4 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] flex items-center gap-2 shadow-xs uppercase tracking-wider"
+              className="px-4 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 flex items-center gap-2 shadow-md shadow-[#F26522]/20 uppercase tracking-wider transition-all hover:scale-[1.02]"
             >
               <Users className="w-4 h-4" />
               <span>{lang === 'bn' ? `নিবন্ধন পর্যালোচনা করুন (${pendingCount})` : `Review Registrations (${pendingCount})`}</span>
@@ -141,7 +141,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/events"
-              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-[#e6eef8] dark:bg-[#112766] text-[#08143A] dark:text-white hover:bg-[#cbd9ec] flex items-center gap-2 border border-[#cbd9ec] dark:border-[#1d3575]"
+              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-[#071333] dark:hover:bg-[#0d1f4d] text-slate-800 dark:text-slate-100 flex items-center gap-2 border border-slate-200 dark:border-[#1d3575] dark:hover:border-[#F26522]/60 transition-all hover:scale-[1.02] shadow-xs"
             >
               <Plus className="w-4 h-4 text-[#F26522]" />
               <span>{lang === 'bn' ? 'নতুন অনুষ্ঠান তৈরি করুন' : 'Create New Event'}</span>
@@ -149,9 +149,9 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/checkin"
-              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-[#e6eef8] dark:bg-[#112766] text-[#08143A] dark:text-white hover:bg-[#cbd9ec] flex items-center gap-2 border border-[#cbd9ec] dark:border-[#1d3575]"
+              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-[#071333] dark:hover:bg-[#0d1f4d] text-slate-800 dark:text-slate-100 flex items-center gap-2 border border-slate-200 dark:border-[#1d3575] dark:hover:border-[#00A3E0]/60 transition-all hover:scale-[1.02] shadow-xs"
             >
-              <QrCode className="w-4 h-4 text-[#19398A] dark:text-[#00A3E0]" />
+              <QrCode className="w-4 h-4 text-[#00A3E0]" />
               <span>{lang === 'bn' ? 'মাঠে কিউআর স্ক্যান করুন' : 'Matchday QR Scanner'}</span>
             </Link>
           </div>

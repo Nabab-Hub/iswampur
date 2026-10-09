@@ -311,7 +311,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <header className="h-16 bg-white dark:bg-[#071333] border-b border-[#cbd9ec] dark:border-[#1d3575] px-4 sm:px-6 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition-opacity"
+            title={lang === 'bn' ? 'মূল ওয়েবসাইটে যান' : 'Go to Home'}
+          >
             <div className="md:hidden relative w-8 h-8 rounded-lg bg-gradient-to-tr from-[#08143A] to-[#19398A] border border-[#F9A01B]/40 p-0.5 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-square-web.png"
@@ -324,7 +328,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h2 className="text-xs sm:text-base lg:text-lg font-black text-[#08143A] dark:text-white truncate">
               {lang === 'bn' ? 'ঈশ্বমপুর অ্যাডমিন প্যানেল' : 'Iswampur Admin Panel'}
             </h2>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
@@ -382,7 +386,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1d3575]">
-            <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 hover:opacity-85 transition-opacity"
+              title={lang === 'bn' ? 'মূল ওয়েবসাইটে যান' : 'Go to Home'}
+            >
               <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-[#08143A] to-[#19398A] border border-[#F9A01B]/40 p-1 flex items-center justify-center">
                 <Image
                   src="/logo-square-web.png"
@@ -400,7 +409,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   Management Panel
                 </p>
               </div>
-            </div>
+            </Link>
 
             <button
               onClick={() => setMobileMenuOpen(false)}
