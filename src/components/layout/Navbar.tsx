@@ -220,6 +220,18 @@ export default function Navbar() {
                 </button>
               )}
 
+              {/* Direct Super Admin Quick Button on Desktop */}
+              {isSuperAdmin && (
+                <Link
+                  href="/super-admin"
+                  className="h-9 px-3 rounded-xl text-xs font-black uppercase tracking-wider text-[#F26522] hover:bg-[#F26522]/10 border border-[#F26522]/30 transition-all flex items-center gap-1.5 whitespace-nowrap shadow-xs"
+                  title="Super Admin Control Panel"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#F26522]" />
+                  <span>{t.nav.superAdmin}</span>
+                </Link>
+              )}
+
               {/* Quick Register CTA Button */}
               <Link
                 href="/register/iswampur-premier-league-2026"
@@ -339,12 +351,23 @@ export default function Navbar() {
                       <Link
                         href="/admin"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="px-2 py-1.5 rounded-lg text-center text-[11px] font-bold bg-[#F26522]/10 text-[#F26522] hover:bg-[#F26522]/20 transition-colors"
+                        className="px-2 py-1.5 rounded-lg text-center text-[11px] font-bold bg-[#19398A]/10 text-[#19398A] dark:text-[#00A3E0] hover:bg-[#19398A]/20 transition-colors"
                       >
                         {t.nav.adminPanel}
                       </Link>
                     )}
                   </div>
+
+                  {isSuperAdmin && (
+                    <Link
+                      href="/super-admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-[#F26522] to-[#F9A01B] text-white shadow-md shadow-[#F26522]/30 hover:brightness-110 active:scale-[0.98] transition-all"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                      <span>{t.nav.superAdmin}</span>
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <button
@@ -377,6 +400,22 @@ export default function Navbar() {
               <p className="text-[10px] uppercase font-black tracking-wider text-slate-400 dark:text-slate-500 px-3 py-1">
                 {lang === 'bn' ? 'মেনু লিংক' : 'Menu Navigation'}
               </p>
+
+              {isSuperAdmin && (
+                <Link
+                  href="/super-admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black tracking-wide text-[#F26522] dark:text-[#F9A01B] bg-[#F26522]/10 border border-[#F26522]/30 hover:bg-[#F26522]/20 transition-all shadow-xs mb-1.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-[#F26522] shrink-0" />
+                    <span>{t.nav.superAdmin}</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black uppercase bg-[#F26522] text-white">
+                    SUPER
+                  </span>
+                </Link>
+              )}
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
