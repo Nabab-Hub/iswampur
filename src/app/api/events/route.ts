@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       showInHero: Boolean(body.showInHero),
       published: body.published !== undefined ? Boolean(body.published) : true,
       registrationEnabled: Boolean(body.registrationEnabled),
+      registrationStartDate: body.registrationStartDate,
       registrationDeadline: body.registrationDeadline,
       registrationFee: Number(body.registrationFee) || 0,
       minPlayers: Number(body.minPlayers) || 11,

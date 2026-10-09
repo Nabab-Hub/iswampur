@@ -112,6 +112,7 @@ export interface VillageEvent {
   showInHero: boolean;
   published: boolean;
   registrationEnabled: boolean;
+  registrationStartDate?: string;
   registrationDeadline?: string;
   registrationFee?: number;
   minPlayers?: number;

@@ -46,6 +46,7 @@ export default function RegistrationPage() {
   const [teamPhone, setTeamPhone] = useState('');
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
 
   // Players list
   const [players, setPlayers] = useState<{ name: string; role?: string }[]>([
@@ -188,6 +189,7 @@ export default function RegistrationPage() {
           emergencyPhone: emergencyPhone.trim(),
           members: players.filter((p) => p.name.trim() !== ''),
         },
+        customFieldValues,
         payment: {
           amount: event.registrationFee || 1500,
           utr: utrNumber.trim(),
@@ -234,27 +236,50 @@ export default function RegistrationPage() {
   }
 
   // Step 0: Gate check
-  const isRegistrationClosed =
-    !event?.registrationEnabled ||
-    (event.registrationDeadline && new Date(event.registrationDeadline) < new Date());
+  const now = new Date();
+  const isNotStarted =
+    event?.registrationStartDate && new Date(event.registrationStartDate) > now;
+  const isExpired =
+    event?.registrationDeadline && new Date(event.registrationDeadline) < now;
+  const isRegistrationClosed = !event?.registrationEnabled || isExpired || isNotStarted;
 
   if (isRegistrationClosed) {
     return (
       <div className="min-h-screen flex flex-col bg-[#f0f4fa] dark:bg-[#050d24]">
         <Navbar />
         <main className="flex-1 max-w-3xl mx-auto px-4 py-16 text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-md">
+          <div
+            className={`w-16 h-16 rounded-full text-white flex items-center justify-center mx-auto shadow-md ${
+              isNotStarted ? 'bg-amber-500' : 'bg-rose-600'
+            }`}
+          >
             <AlertCircle className="w-8 h-8" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#08143A] dark:text-white">
-            {t.hero.registrationClosed}
+            {isNotStarted
+              ? lang === 'bn'
+                ? 'অনলাইন নিবন্ধন শীঘ্রই চালু হবে'
+                : 'Registration Opens Soon'
+              : t.hero.registrationClosed}
           </h1>
           <p className="text-[#273656] dark:text-[#CBD5E1] text-sm sm:text-base font-semibold">
-            {event
-              ? (lang === 'bn'
-                ? `${resolveBilingual(event.title)} এর অনলাইন নিবন্ধন সমাপ্ত হয়েছে অথবা বর্তমান সময়ে বন্ধ আছে।`
-                : `Online registration for ${resolveBilingual(event.title)} is currently closed.`)
-              : (lang === 'bn' ? 'অনলাইন নিবন্ধন বন্ধ রয়েছে।' : 'Registration is closed.')}
+            {isNotStarted
+              ? lang === 'bn'
+                ? `${resolveBilingual(event?.title)} এর অনলাইন নিবন্ধন শুরু হবে: ${new Date(
+                    event!.registrationStartDate!
+                  ).toLocaleString('bn-BD', { dateStyle: 'long', timeStyle: 'short' })}`
+                : `Online registration for ${resolveBilingual(event?.title)} begins on ${new Date(
+                    event!.registrationStartDate!
+                  ).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}`
+              : isExpired
+              ? lang === 'bn'
+                ? `${resolveBilingual(event?.title)} এর অনলাইন নিবন্ধনের সময়সীমা (${new Date(
+                    event!.registrationDeadline!
+                  ).toLocaleDateString('bn-BD', { dateStyle: 'long' })}) শেষ হয়েছে।`
+                : `The registration deadline for ${resolveBilingual(event?.title)} has expired.`
+              : lang === 'bn'
+              ? `${resolveBilingual(event?.title)} এর অনলাইন নিবন্ধন বর্তমান সময়ে বন্ধ রয়েছে।`
+              : `Online registration for ${resolveBilingual(event?.title)} is currently closed.`}
           </p>
         </main>
         <Footer />
@@ -548,6 +573,85 @@ export default function RegistrationPage() {
                 </div>
               </div>
 
+              {/* Dynamic Custom Fields (Configured from Admin Form Builder) */}
+              {event?.customFields && event.customFields.length > 0 && (
+                <div className="pt-4 border-t border-[#cbd9ec] dark:border-[#1d3575] space-y-4">
+                  <div>
+                    <h4 className="font-black text-[#08143A] dark:text-white text-base">
+                      {lang === 'bn' ? 'অতিরিক্ত তথ্য (Custom Form Fields)' : 'Additional Required Information'}
+                    </h4>
+                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                      {lang === 'bn' ? 'টুর্নামেন্ট কমিটির নির্দেশ অনুযায়ী নিচের তথ্যগুলো পূরণ করুন।' : 'Please fill in the additional details required for this tournament.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {event.customFields.map((field) => (
+                      <div key={field.id} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
+                        <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
+                          {resolveBilingual(field.label)} {field.required && <span className="text-rose-500">*</span>}
+                        </label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            required={field.required}
+                            rows={3}
+                            placeholder={field.placeholder ? resolveBilingual(field.placeholder) : ''}
+                            value={customFieldValues[field.id] || ''}
+                            onChange={(e) =>
+                              setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })
+                            }
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white text-xs sm:text-sm font-semibold focus:border-[#F26522]"
+                          />
+                        ) : field.type === 'select' ? (
+                          <select
+                            required={field.required}
+                            value={customFieldValues[field.id] || ''}
+                            onChange={(e) =>
+                              setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })
+                            }
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white text-xs sm:text-sm font-semibold focus:border-[#F26522]"
+                          >
+                            <option value="">{lang === 'bn' ? '-- নির্বাচন করুন --' : '-- Select --'}</option>
+                            {field.options?.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : field.type === 'checkbox' ? (
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(customFieldValues[field.id])}
+                              onChange={(e) =>
+                                setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.checked })
+                              }
+                              className="w-4 h-4 rounded text-[#F26522]"
+                            />
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                              {field.placeholder
+                                ? resolveBilingual(field.placeholder)
+                                : resolveBilingual(field.label)}
+                            </span>
+                          </label>
+                        ) : (
+                          <input
+                            type={field.type}
+                            required={field.required}
+                            placeholder={field.placeholder ? resolveBilingual(field.placeholder) : ''}
+                            value={customFieldValues[field.id] || ''}
+                            onChange={(e) =>
+                              setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })
+                            }
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white text-xs sm:text-sm font-semibold focus:border-[#F26522]"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between pt-6 border-t border-[#cbd9ec] dark:border-[#1d3575]">
                 <button
                   onClick={() => setStep(2)}
@@ -560,7 +664,11 @@ export default function RegistrationPage() {
                     !teamName ||
                     !teamAddress ||
                     !teamPhone ||
-                    players.slice(0, event?.minPlayers || 11).some((p) => !p.name.trim())
+                    players.slice(0, event?.minPlayers || 11).some((p) => !p.name.trim()) ||
+                    Boolean(
+                      event?.customFields &&
+                        event.customFields.some((f) => f.required && !customFieldValues[f.id])
+                    )
                   }
                   onClick={() => setStep(4)}
                   className="px-7 py-3 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 uppercase tracking-wider text-sm shadow-md"
