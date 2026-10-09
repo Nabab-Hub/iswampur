@@ -74,34 +74,34 @@ export default function HeroSection({ featuredEvent }: HeroSectionProps) {
               </div>
             </div>
 
-            {/* Primary Action Buttons - Clean Mobile App Layout */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-3 max-w-lg mx-auto lg:mx-0">
+            {/* Primary Action Buttons */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-3.5 pt-3 w-full">
               {isRegistrationOpen && (
                 <Link
                   href={featuredEvent ? `/register/${featuredEvent.slug}` : '/register/iswampur-premier-league-2026'}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 shadow-lg shadow-[#F26522]/30 transition-all flex items-center justify-center gap-2 group text-sm sm:text-base active:scale-[0.98]"
+                  className="w-full sm:w-auto shrink-0 px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 shadow-lg shadow-[#F26522]/30 transition-all flex items-center justify-center gap-2 group text-sm sm:text-base whitespace-nowrap active:scale-[0.98]"
                 >
-                  <Trophy className="w-4 h-4" />
-                  <span>{t.hero.registerBtn}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <Trophy className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">{t.hero.registerBtn}</span>
+                  <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                 </Link>
               )}
 
-              <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                 <Link
                   href="/ipl"
-                  className="px-3 sm:px-6 py-3.5 rounded-xl font-extrabold text-white bg-[#19398A] hover:bg-[#122b6a] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base border border-[#F9A01B]/40 shadow-sm active:scale-[0.98]"
+                  className="flex-1 sm:flex-initial shrink-0 px-4 sm:px-5 py-3.5 rounded-xl font-extrabold text-white bg-[#19398A] hover:bg-[#122b6a] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base border border-[#F9A01B]/40 shadow-sm whitespace-nowrap active:scale-[0.98]"
                 >
                   <Flame className="w-4 h-4 text-[#F9A01B] shrink-0" />
-                  <span className="truncate">{lang === 'bn' ? 'আইপিএল হাব ও নিয়ম' : 'IPL Hub & Rules'}</span>
+                  <span className="whitespace-nowrap">{lang === 'bn' ? 'আইপিএল হাব ও নিয়ম' : 'IPL Hub & Rules'}</span>
                 </Link>
 
                 <Link
                   href="/events"
-                  className="px-3 sm:px-5 py-3.5 rounded-xl font-bold text-[#08143A] dark:text-white bg-white dark:bg-[#0c1a40] hover:bg-[#e6eef8] dark:hover:bg-[#102766] border border-[#cbd9ec] dark:border-[#1d3575] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base active:scale-[0.98]"
+                  className="flex-1 sm:flex-initial shrink-0 px-4 sm:px-5 py-3.5 rounded-xl font-bold text-[#08143A] dark:text-white bg-white dark:bg-[#0c1a40] hover:bg-[#e6eef8] dark:hover:bg-[#102766] border border-[#cbd9ec] dark:border-[#1d3575] transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-base whitespace-nowrap active:scale-[0.98]"
                 >
                   <Calendar className="w-4 h-4 text-[#19398A] dark:text-[#00A3E0] shrink-0" />
-                  <span className="truncate">{t.hero.exploreEvents}</span>
+                  <span className="whitespace-nowrap">{t.hero.exploreEvents}</span>
                 </Link>
               </div>
             </div>
