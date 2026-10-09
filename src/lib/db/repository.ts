@@ -1,13 +1,16 @@
 import {
   AdminUser,
+  AppDirectoryUser,
   AuditLogEntry,
   ContactMessage,
   IPLSeason,
   PermissionKey,
   PostAnnouncement,
   SiteSettings,
+  TeamContactInfo,
   TeamPass,
   TeamRegistration,
+  UserRole,
   VillageEvent,
 } from '@/types';
 import { adminFirestore } from '@/lib/firebase/admin';
@@ -326,8 +329,40 @@ class DataStore {
   passes: TeamPass[] = [];
   auditLogs: AuditLogEntry[] = [];
   contactMessages: ContactMessage[] = [];
+  users: AppDirectoryUser[] = [];
 
   constructor() {
+    // Initial seeded users
+    this.users.push(
+      {
+        uid: 'uid_super_admin',
+        email: DEFAULT_SUPER_ADMIN_EMAIL.toLowerCase(),
+        displayName: 'Super Administrator',
+        role: 'super_admin',
+        firstLoginAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        loginCount: 12,
+      },
+      {
+        uid: 'uid_admin_1',
+        email: INITIAL_ADMIN_EMAIL.toLowerCase(),
+        displayName: 'System Admin',
+        role: 'admin',
+        firstLoginAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        lastLoginAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+        loginCount: 7,
+      },
+      {
+        uid: 'sample_user_uid_123',
+        email: 'team.warriors@gmail.com',
+        displayName: 'Rahul Mondal (Team Rep)',
+        role: 'team_user',
+        firstLoginAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        lastLoginAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+        loginCount: 3,
+      }
+    );
+
     // Add an initial sample registration to showcase the dashboard & approval immediately
     const sampleRegId = 'reg_sample_warriors_01';
     const samplePassId = 'pass_isw_sample_789';
@@ -816,5 +851,95 @@ export const repository = {
       }
     }
     return globalStore.contactMessages;
+  },
+
+  // Users Directory (Track all logged-in users)
+  async getUsers(): Promise<AppDirectoryUser[]> {
+    if (db) {
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        if (!snap.empty) {
+          const items = snap.docs.map((d) => d.data() as AppDirectoryUser);
+          globalStore.users = items;
+          return items;
+        } else if (globalStore.users.length > 0) {
+          for (const u of globalStore.users) {
+            const docId = u.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+            await setDoc(doc(db, 'users', docId), cleanForFirestore(u));
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore getUsers error, using local fallback:', err);
+      }
+    }
+    return globalStore.users;
+  },
+
+  async recordUserLogin(userData: {
+    uid: string;
+    email: string;
+    displayName: string;
+    photoURL?: string;
+    role: UserRole;
+  }): Promise<AppDirectoryUser> {
+    const normalizedEmail = userData.email.toLowerCase().trim();
+    const existingIndex = globalStore.users.findIndex(
+      (u) => u.email.toLowerCase() === normalizedEmail
+    );
+    const now = new Date().toISOString();
+
+    let updatedUser: AppDirectoryUser;
+    if (existingIndex >= 0) {
+      const existing = globalStore.users[existingIndex];
+      updatedUser = {
+        ...existing,
+        uid: userData.uid || existing.uid,
+        displayName: userData.displayName || existing.displayName,
+        photoURL: userData.photoURL || existing.photoURL,
+        role: userData.role || existing.role,
+        lastLoginAt: now,
+        loginCount: (existing.loginCount || 1) + 1,
+      };
+      globalStore.users[existingIndex] = updatedUser;
+    } else {
+      updatedUser = {
+        uid: userData.uid || `uid_${Date.now()}`,
+        email: normalizedEmail,
+        displayName: userData.displayName || normalizedEmail.split('@')[0],
+        photoURL: userData.photoURL,
+        role: userData.role || 'team_user',
+        firstLoginAt: now,
+        lastLoginAt: now,
+        loginCount: 1,
+      };
+      globalStore.users.unshift(updatedUser);
+    }
+
+    if (db) {
+      try {
+        const docId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        await setDoc(doc(db, 'users', docId), cleanForFirestore(updatedUser), { merge: true });
+      } catch (err) {
+        console.warn('Firestore recordUserLogin error:', err);
+      }
+    }
+
+    return updatedUser;
+  },
+
+  // Team Contacts & Emails
+  async getTeamContacts(): Promise<TeamContactInfo[]> {
+    const registrations = await this.getRegistrations();
+    return registrations.map((r) => ({
+      teamName: r.team.name,
+      representativeName: r.team.representativeName,
+      email: r.team.email,
+      phone: r.team.phone,
+      eventId: r.eventId,
+      status: r.status,
+      registrationId: r.id,
+      memberCount: (r.team.members || (r.team as any).players || []).length,
+      submittedAt: r.createdAt,
+    }));
   },
 };

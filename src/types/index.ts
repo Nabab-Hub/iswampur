@@ -37,6 +37,30 @@ export interface AdminUser {
   lastLoginAt?: string;
 }
 
+export interface AppDirectoryUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  role: UserRole;
+  firstLoginAt: string;
+  lastLoginAt: string;
+  loginCount: number;
+}
+
+export interface TeamContactInfo {
+  teamName: string;
+  representativeName: string;
+  email: string;
+  phone: string;
+  eventId: string;
+  eventTitle?: BilingualText;
+  status: RegistrationStatus;
+  registrationId: string;
+  memberCount: number;
+  submittedAt: string;
+}
+
 export interface SiteSettings {
   siteName: BilingualText;
   logoUrl?: string;

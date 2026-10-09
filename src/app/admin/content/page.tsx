@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/lib/i18n/context';
+import { useAuth } from '@/lib/auth/authContext';
 import { SiteSettings } from '@/types';
 import { Settings, Save, CheckCircle2, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
 export default function AdminContentPage() {
   const { lang } = useLanguage();
+  const { user } = useAuth();
   const toast = useToast();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,8 +44,14 @@ export default function AdminContentPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user?.email || '',
+        },
+        body: JSON.stringify({
+          ...settings,
+          actorEmail: user?.email,
+        }),
       });
       if (res.ok) {
         setSavedSuccess(true);
