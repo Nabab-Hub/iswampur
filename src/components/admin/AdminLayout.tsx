@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -52,12 +52,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, loading, hasPermission, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isSuperAdmin = user?.role === 'super_admin';
 
-  // 1. Loading state
-  if (loading) {
+  // 1. Loading state (Guaranteed same on SSR and initial client hydration pass)
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-2xl border-4 border-[#F26522] border-t-transparent animate-spin mb-4" />

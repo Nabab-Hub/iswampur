@@ -43,6 +43,11 @@ export default function SuperAdminPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // New admin input
   const [newEmail, setNewEmail] = useState('');
@@ -186,8 +191,8 @@ export default function SuperAdminPage() {
     loadData();
   };
 
-  // 1. Loading authentication
-  if (authLoading || (loading && user?.role === 'super_admin')) {
+  // 1. Loading authentication (Guaranteed same on SSR and initial client hydration pass)
+  if (!mounted || authLoading || (loading && user?.role === 'super_admin')) {
     return (
       <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-2xl border-4 border-[#F26522] border-t-transparent animate-spin mb-4" />
