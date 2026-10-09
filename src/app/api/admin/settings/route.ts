@@ -13,8 +13,14 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+    const isAdmin = actorEmail === superAdminEmail || Boolean(await repository.getAdminByEmail(actorEmail));
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin permissions required' }, { status: 403 });
+    }
+
     const body = await req.json();
-    const actorEmail = req.headers.get('x-user-email') || 'admin';
 
     const updated = await repository.updateSettings(body);
 

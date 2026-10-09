@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Globe,
+  LogOut,
 } from 'lucide-react';
 
 const ALL_PERMISSIONS: { key: PermissionKey; labelBn: string; labelEn: string }[] = [
@@ -36,7 +37,7 @@ const ALL_PERMISSIONS: { key: PermissionKey; labelBn: string; labelEn: string }[
 ];
 
 export default function SuperAdminPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -55,11 +56,12 @@ export default function SuperAdminPage() {
   const [statusMsg, setStatusMsg] = useState('');
 
   const loadData = async () => {
+    if (!user || user.role !== 'super_admin') return;
     try {
       const [admRes, setRes, logRes] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/settings'),
-        fetch('/api/admin/audit-logs'),
+        fetch('/api/admin/users', { headers: { 'x-user-email': user.email } }),
+        fetch('/api/admin/settings', { headers: { 'x-user-email': user.email } }),
+        fetch('/api/admin/audit-logs', { headers: { 'x-user-email': user.email } }),
       ]);
       if (admRes.ok) setAdmins(await admRes.json());
       if (setRes.ok) setSettings(await setRes.json());
@@ -72,8 +74,12 @@ export default function SuperAdminPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading && user && user.role === 'super_admin') {
+      loadData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   const handleTogglePermission = async (admin: AdminUser, perm: PermissionKey) => {
     const exists = admin.permissions.includes(perm);
@@ -179,6 +185,113 @@ export default function SuperAdminPage() {
     });
     loadData();
   };
+
+  // 1. Loading authentication
+  if (authLoading || (loading && user?.role === 'super_admin')) {
+    return (
+      <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#F26522] border-t-transparent animate-spin mb-4" />
+        <p className="text-sm font-bold text-slate-300">
+          {lang === 'bn' ? 'সুপার অ্যাডমিন অনুমতি যাচাই করা হচ্ছে...' : 'Verifying Root System Authority...'}
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated state (Prompt Sign in)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-[#071333] border border-rose-500/40 rounded-3xl p-8 shadow-2xl space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-500">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-white">
+              {lang === 'bn' ? 'সুপার অ্যাডমিন লগইন আবশ্যক' : 'Super Admin Login Required'}
+            </h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {lang === 'bn'
+                ? 'সুপার অ্যাডমিন কনসোলে প্রবেশের জন্য অনুমোদিত সুপার অ্যাডমিন অ্যাকাউন্টে সাইন-ইন করুন।'
+                : 'Access to the Super Admin Console is strictly restricted. Please sign in with primary root credentials.'}
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={signInWithGoogle}
+              className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#F26522] to-[#F9A01B] text-white hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#F26522]/30"
+            >
+              <span>{lang === 'bn' ? 'গুগল দিয়ে সাইন-ইন করুন' : 'Sign in with Google'}</span>
+            </button>
+
+            <Link
+              href="/"
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{lang === 'bn' ? 'মূল ওয়েবসাইটে ফিরে যান' : 'Back to Home'}</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Unauthorized state (Logged in, but not super_admin)
+  if (user.role !== 'super_admin') {
+    return (
+      <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-[#071333] border border-rose-500/50 rounded-3xl p-8 shadow-2xl space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center mx-auto text-rose-500">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-block px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 text-[11px] font-black uppercase tracking-wider">
+              403 FORBIDDEN - ROOT ONLY
+            </div>
+            <h2 className="text-2xl font-black text-white">
+              {lang === 'bn' ? 'অননুমোদিত সুপার অ্যাডমিন কনসোল' : 'Super Admin Access Restricted'}
+            </h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {lang === 'bn'
+                ? `আপনার অ্যাকাউন্ট (${user.email}) এর সুপার অ্যাডমিন অনুমতি নেই। এই কনসোলটি শুধুমাত্র চিফ সিস্টেম অ্যাডমিনিস্ট্রেটরের জন্য সংরক্ষিত।`
+                : `Your account (${user.email}) does not have Super Admin authority. This console is restricted exclusively to primary root administrators.`}
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {user.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#19398A] to-[#1e4bb8] text-white hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#19398A]/30 border border-[#F9A01B]/30"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>{lang === 'bn' ? 'সাধারণ অ্যাডমিন প্যানেলে যান' : 'Go to Admin Panel'}</span>
+              </Link>
+            )}
+
+            <Link
+              href="/"
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>{lang === 'bn' ? 'মূল ওয়েবসাইটে ফিরে যান' : 'Back to Home'}</span>
+            </Link>
+
+            <button
+              onClick={signOut}
+              className="w-full py-2 px-4 rounded-xl font-bold text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 border border-rose-900/40 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'লগআউট / অন্য অ্যাকাউন্ট' : 'Sign Out / Switch Account'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050D24] text-slate-100 p-6 sm:p-10 space-y-10">

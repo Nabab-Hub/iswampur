@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { repository } from '@/lib/db/repository';
 import { AdminUser } from '@/types';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+    if (actorEmail !== superAdminEmail) {
+      return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
+    }
+
     const admins = await repository.getAdmins();
     return NextResponse.json(admins);
   } catch (error) {
@@ -14,8 +20,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+    if (actorEmail !== superAdminEmail) {
+      return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
+    }
+
     const body = await req.json();
-    const actorEmail = req.headers.get('x-user-email') || 'super_admin';
 
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -66,8 +77,13 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+    if (actorEmail !== superAdminEmail) {
+      return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
+    }
+
     const body = await req.json();
-    const actorEmail = req.headers.get('x-user-email') || 'super_admin';
 
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -107,9 +123,14 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+    if (actorEmail !== superAdminEmail) {
+      return NextResponse.json({ error: 'Unauthorized: Super Admin credentials required' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
-    const actorEmail = req.headers.get('x-user-email') || 'super_admin';
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
