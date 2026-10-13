@@ -21,17 +21,23 @@ export async function POST(req: NextRequest) {
 
     const newPost: PostAnnouncement = {
       id: `post_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      type: body.type || (body.images && body.images.length > 0 ? 'post' : 'notice'),
       title: body.title,
       content: body.content,
+      memoNo: body.memoNo,
+      date: body.date,
+      eventId: body.eventId,
+      eventName: body.eventName,
       coverImage: body.coverImage,
       images: body.images || (body.coverImage ? [body.coverImage] : []),
       category: body.category || 'notice',
       published: body.published !== undefined ? Boolean(body.published) : true,
       featured: Boolean(body.featured),
       publishAt: body.publishAt,
-      createdAt: new Date().toISOString(),
+      createdAt: body.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       authorEmail: actorEmail,
+      signatory: body.signatory,
     };
 
     const saved = await repository.savePost(newPost);

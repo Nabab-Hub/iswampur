@@ -284,6 +284,10 @@ const DEFAULT_EVENTS: VillageEvent[] = [
 const DEFAULT_POSTS: PostAnnouncement[] = [
   {
     id: 'notice-1',
+    type: 'notice',
+    memoNo: 'ISW/NOT/2026/01',
+    date: '10 Oct 2026',
+    signatory: 'General Secretary / Executive Convener',
     title: {
       bn: 'আইপিএল ২০২৬ এর অনলাইন দল নিবন্ধন শুরু হয়েছে!',
       en: 'IPL 2026 Online Team Registration is officially open!',
@@ -301,6 +305,10 @@ const DEFAULT_POSTS: PostAnnouncement[] = [
   },
   {
     id: 'notice-2',
+    type: 'notice',
+    memoNo: 'ISW/NOT/2026/02',
+    date: '12 Oct 2026',
+    signatory: 'Grounds & Pitch Committee In-Charge',
     title: {
       bn: 'মাঠ সংস্কার ও পিচ প্রস্তুতকরণ কাজ সম্পন্ন',
       en: 'Central ground maintenance and turf pitch preparation completed',
@@ -315,6 +323,32 @@ const DEFAULT_POSTS: PostAnnouncement[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     authorEmail: INITIAL_ADMIN_EMAIL,
+  },
+  {
+    id: 'post-1',
+    type: 'post',
+    eventId: 'ipl-2026',
+    eventName: 'Iswampur Premier League 2026',
+    likesCount: 48,
+    title: {
+      bn: 'মাঠের পিচ প্রস্তুতি ও নেট প্র্যাকটিস ঝলক 🏏🔥',
+      en: 'Match turf pitch prep & team net practice highlights 🏏🔥',
+    },
+    content: {
+      bn: 'ঈশ্বমপুর হাইস্কুল কেন্দ্রীয় মাঠে আইপিএল ২০২৬ এর জন্য বিশেষ টার্ফ পিচ রোলিং এবং প্রস্তুতি সম্পন্ন হয়েছে। গ্রামের তরুণদের অনুশীলন দারুণ জমে উঠেছে!',
+      en: 'Turf pitch preparation and boundary line marking completed at Iswampur central grounds. Catch the electrifying energy as village teams begin their warm-up sessions!',
+    },
+    images: [
+      'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1531415074868-036b107e775a?auto=format&fit=crop&w=1200&q=80',
+    ],
+    coverImage: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80',
+    category: 'event',
+    published: true,
+    featured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    authorEmail: DEFAULT_SUPER_ADMIN_EMAIL,
   },
 ];
 

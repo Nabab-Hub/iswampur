@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/lib/i18n/context';
 import { PostAnnouncement } from '@/types';
 import { Bell, Calendar, Sparkles } from 'lucide-react';
-import ImageSlider from '@/components/common/ImageSlider';
+import SocialPhotoGrid from '@/components/common/SocialPhotoGrid';
 
 export default function AnnouncementsPage() {
   const { lang, t, resolveBilingual } = useLanguage();
@@ -73,10 +73,10 @@ export default function AnnouncementsPage() {
                     key={post.id}
                     className="rounded-3xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] hover:border-[#F26522] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 space-y-4"
                   >
-                    {/* Multi-Image Carousel Header if images present */}
+                    {/* Multi-Image Collage if images present */}
                     {postImages.length > 0 && (
                       <div className="w-full">
-                        <ImageSlider images={postImages} alt={post.title.bn} aspectRatio="video" />
+                        <SocialPhotoGrid images={postImages} alt={post.title.bn} />
                       </div>
                     )}
 
@@ -93,9 +93,16 @@ export default function AnnouncementsPage() {
                         >
                           {post.category}
                         </span>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
-                          <Calendar className="w-3.5 h-3.5 text-[#F26522]" />
-                          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        <div className="flex items-center gap-3">
+                          {post.memoNo && (
+                            <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                              REF: {post.memoNo}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                            <Calendar className="w-3.5 h-3.5 text-[#F26522]" />
+                            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -108,6 +115,24 @@ export default function AnnouncementsPage() {
                       <p className="text-sm sm:text-base text-[#273656] dark:text-[#CBD5E1] leading-relaxed whitespace-pre-line font-medium">
                         {resolveBilingual(post.content)}
                       </p>
+
+                      {/* Download Official PDF Button for Notices */}
+                      <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-[#1d3575]">
+                        {post.signatory && (
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold italic">
+                            By: {post.signatory}
+                          </span>
+                        )}
+                        <a
+                          href={`/api/notices/${post.id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#19398A] to-[#00A3E0] hover:brightness-110 text-white inline-flex items-center gap-2 shadow-sm transition-all hover:scale-105 ml-auto"
+                        >
+                          <span>{lang === 'bn' ? 'অফিসিয়াল নোটিশ PDF ডাউনলোড' : 'Download Official Notice PDF'}</span>
+                          <span>↓</span>
+                        </a>
+                      </div>
                     </div>
                   </article>
                 );

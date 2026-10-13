@@ -171,8 +171,13 @@ export interface VillageEvent {
 
 export interface PostAnnouncement {
   id: string;
+  type?: 'notice' | 'post'; // 'notice' for official text notices, 'post' for Instagram-style event updates
   title: BilingualText;
   content: BilingualText;
+  memoNo?: string; // Official memo / circular reference number e.g. ISW/NOT/2026/01
+  date?: string; // Official notice or post date
+  eventId?: string; // Optional linked event ID for posts
+  eventName?: string; // Optional linked event title
   coverImage?: string;
   images?: string[]; // Multiple images for instagram-like gallery posts
   category: 'notice' | 'ipl' | 'event' | 'urgent' | 'result';
@@ -182,6 +187,8 @@ export interface PostAnnouncement {
   createdAt: string;
   updatedAt: string;
   authorEmail: string;
+  likesCount?: number;
+  signatory?: string; // e.g. "Secretary & Management Committee, Iswampur"
 }
 
 export interface IPLSeason {

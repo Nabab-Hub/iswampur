@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/authContext';
 import { useLanguage } from '@/lib/i18n/context';
 import {
@@ -11,6 +11,7 @@ import {
   Calendar,
   Users,
   Bell,
+  Camera,
   Settings,
   ShieldCheck,
   QrCode,
@@ -49,10 +50,22 @@ function GoogleIcon() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTabParam = searchParams?.get('tab');
   const { user, loading, hasPermission, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const checkIsActive = (href: string) => {
+    if (href === '/admin/posts?tab=posts') {
+      return pathname === '/admin/posts' && activeTabParam === 'posts';
+    }
+    if (href === '/admin/posts') {
+      return pathname === '/admin/posts' && activeTabParam !== 'posts';
+    }
+    return pathname === href;
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -186,6 +199,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       show: hasPermission('notices.manage'),
     },
     {
+      href: '/admin/posts?tab=posts',
+      label: lang === 'bn' ? 'পোস্ট ও ছবি (Feed)' : 'Event Posts (Feed)',
+      icon: Camera,
+      show: hasPermission('notices.manage'),
+    },
+    {
       href: '/admin/checkin',
       label: lang === 'bn' ? 'মাঠের কিউআর চেক-ইন' : 'Matchday QR Check-in',
       icon: QrCode,
@@ -262,7 +281,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {menuItems
             .filter((item) => item.show)
             .map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = checkIsActive(item.href);
               return (
                 <Link
                   key={item.href}
@@ -450,7 +469,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {menuItems
               .filter((item) => item.show)
               .map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = checkIsActive(item.href);
                 return (
                   <Link
                     key={item.href}

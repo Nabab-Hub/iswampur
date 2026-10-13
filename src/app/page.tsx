@@ -26,7 +26,7 @@ export default async function HomePage() {
       <AnnouncementsTicker posts={posts} />
       <main className="flex-1">
         <HeroSection featuredEvent={heroEvent} />
-        <FeaturedEvents events={events} />
+        <FeaturedEvents events={events} posts={posts} />
         <IPLPromoBanner />
         <VillageGalleryPreview />
         <AboutPreview />
