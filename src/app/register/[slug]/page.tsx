@@ -22,6 +22,8 @@ import {
   Trash2,
   FileCheck,
   Loader2,
+  Check,
+  X,
 } from 'lucide-react';
 
 export default function RegistrationPage() {
@@ -99,6 +101,23 @@ export default function RegistrationPage() {
     loadData();
   }, [slug]);
 
+  // Synchronize players count strictly with event.maxPlayers configuration
+  useEffect(() => {
+    if (event?.maxPlayers) {
+      const maxCount = Number(event.maxPlayers) || 15;
+      setPlayers((prev) => {
+        if (prev.length === maxCount) return prev;
+        return Array.from({ length: maxCount }, (_, idx) => {
+          const existing = prev[idx];
+          return {
+            name: existing?.name || (idx === 0 && user?.displayName ? user.displayName : ''),
+            role: existing?.role || (idx === 0 ? 'captain' : idx === 1 ? 'vice_captain' : 'player'),
+          };
+        });
+      });
+    }
+  }, [event?.maxPlayers, user?.displayName]);
+
   // Sync user info into form once signed in
   useEffect(() => {
     if (user) {
@@ -161,6 +180,42 @@ export default function RegistrationPage() {
     }
   };
 
+  // Step 3 Validation & Next Navigation
+  const handleNextFromStep3 = () => {
+    const cleanPhone = teamPhone.replace(/\D/g, '');
+    if (event?.formPresets?.requirePhone !== false && cleanPhone.length !== 10) {
+      setErrorMsg(
+        lang === 'bn'
+          ? 'মোবাইল নম্বরটি অবশ্যই সঠিক ১০ ডিজিটের হতে হবে (উদাঃ 9876543210)।'
+          : 'Mobile phone number must be exactly 10 digits (e.g. 9876543210).'
+      );
+      return;
+    }
+
+    const cleanEmerPhone = emergencyPhone.replace(/\D/g, '');
+    if (emergencyPhone.trim()) {
+      if (cleanEmerPhone.length !== 10) {
+        setErrorMsg(
+          lang === 'bn'
+            ? 'জরুরি ফোন নম্বরটিও অবশ্যই সঠিক ১০ ডিজিটের হতে হবে।'
+            : 'Emergency phone number must be exactly 10 digits.'
+        );
+        return;
+      }
+      if (cleanEmerPhone === cleanPhone) {
+        setErrorMsg(
+          lang === 'bn'
+            ? 'জরুরি ফোন নম্বর এবং প্রধান মোবাইল নম্বর আলাদা হতে হবে।'
+            : 'Emergency phone number must be different from primary phone number.'
+        );
+        return;
+      }
+    }
+
+    setErrorMsg('');
+    setStep(4);
+  };
+
   // Final Registration Submission
   const handleSubmitRegistration = async () => {
     if (!user) {
@@ -169,10 +224,28 @@ export default function RegistrationPage() {
     }
     if (!event) return;
 
+    const cleanPhone = teamPhone.replace(/\D/g, '');
+    if (event?.formPresets?.requirePhone !== false && cleanPhone.length !== 10) {
+      setErrorMsg(lang === 'bn' ? 'মোবাইল নম্বরটি অবশ্যই সঠিক ১০ ডিজিটের হতে হবে।' : 'Phone number must be exactly 10 digits.');
+      setStep(3);
+      return;
+    }
+    const cleanEmer = emergencyPhone.replace(/\D/g, '');
+    if (emergencyPhone.trim() && cleanEmer.length !== 10) {
+      setErrorMsg(lang === 'bn' ? 'জরুরি ফোন নম্বরটিও অবশ্যই সঠিক ১০ ডিজিটের হতে হবে।' : 'Emergency phone number must be exactly 10 digits.');
+      setStep(3);
+      return;
+    }
+
     setSubmitting(true);
     setErrorMsg('');
 
     try {
+      const isSquadRequired = event.formPresets?.requireSquad !== false;
+      const effectiveMembers = isSquadRequired && players.filter((p) => p.name.trim() !== '').length > 0
+        ? players.filter((p) => p.name.trim() !== '')
+        : [{ name: repName.trim() || user.displayName || 'Participant', role: 'captain' }];
+
       const payload = {
         eventId: event.id,
         ownerUid: user.uid,
@@ -181,20 +254,24 @@ export default function RegistrationPage() {
         rulesAcceptedAt: new Date().toISOString(),
         termsVersion: event.rulesVersion || '2026.1',
         team: {
-          name: teamName.trim(),
-          address: teamAddress.trim(),
-          representativeName: repName.trim(),
-          email: teamEmail.trim(),
-          phone: teamPhone.trim(),
+          name: teamName.trim() || repName.trim() || user.displayName || 'Participant',
+          address: teamAddress.trim() || 'N/A',
+          representativeName: repName.trim() || user.displayName || 'Representative',
+          email: teamEmail.trim() || user.email || '',
+          phone: cleanPhone,
           emergencyName: emergencyName.trim(),
-          emergencyPhone: emergencyPhone.trim(),
-          members: players.filter((p) => p.name.trim() !== ''),
+          emergencyPhone: cleanEmer,
+          members: effectiveMembers,
         },
         customFieldValues,
         payment: {
-          amount: event.registrationFee || 1500,
-          utr: utrNumber.trim(),
-          screenshotUrl: screenshotUrl || 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=600&q=80',
+          amount: event.registrationFee ?? 0,
+          utr: utrNumber.trim() || (event.registrationFee === 0 ? 'FREE_REGISTRATION' : ''),
+          screenshotUrl:
+            screenshotUrl ||
+            (event.registrationFee === 0
+              ? 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=600&q=80'
+              : ''),
         },
         status: 'PENDING_REVIEW',
       };
@@ -238,11 +315,16 @@ export default function RegistrationPage() {
 
   // Step 0: Gate check
   const now = new Date();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isEventEnded = Boolean(
+    event?.endDate ? event.endDate < todayStr : event?.startDate ? event.startDate < todayStr : false
+  );
+  const isDraft = event?.status === 'draft' || event?.published === false;
   const isNotStarted =
-    event?.registrationStartDate && new Date(event.registrationStartDate) > now;
+    Boolean(event?.registrationStartDate && new Date(event.registrationStartDate) > now);
   const isExpired =
-    event?.registrationDeadline && new Date(event.registrationDeadline) < now;
-  const isRegistrationClosed = !event?.registrationEnabled || isExpired || isNotStarted;
+    Boolean(event?.registrationDeadline && new Date(event.registrationDeadline) < now);
+  const isRegistrationClosed = !event?.registrationEnabled || isExpired || isNotStarted || isEventEnded || isDraft;
 
   if (isRegistrationClosed) {
     return (
@@ -257,14 +339,30 @@ export default function RegistrationPage() {
             <AlertCircle className="w-8 h-8" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#08143A] dark:text-white">
-            {isNotStarted
+            {isDraft
+              ? lang === 'bn'
+                ? 'অনলাইন নিবন্ধন বর্তমানে প্রস্তুত করা হচ্ছে'
+                : 'Registration Form Under Preparation'
+              : isEventEnded
+              ? lang === 'bn'
+                ? 'অনুষ্ঠানটি সম্পন্ন হয়েছে'
+                : 'Event Has Concluded'
+              : isNotStarted
               ? lang === 'bn'
                 ? 'অনলাইন নিবন্ধন শীঘ্রই চালু হবে'
                 : 'Registration Opens Soon'
               : t.hero.registrationClosed}
           </h1>
           <p className="text-[#273656] dark:text-[#CBD5E1] text-sm sm:text-base font-semibold">
-            {isNotStarted
+            {isDraft
+              ? lang === 'bn'
+                ? `${resolveBilingual(event?.title)} এর ফর্মটি ড্রাফট মোডে রয়েছে। খুব শীঘ্রই প্রকাশ করা হবে।`
+                : `The registration form for ${resolveBilingual(event?.title)} is currently in draft mode.`
+              : isEventEnded
+              ? lang === 'bn'
+                ? `${resolveBilingual(event?.title)} অনুষ্ঠানটির সময়কাল শেষ হয়ে যাওয়ায় নিবন্ধন বন্ধ করা হয়েছে।`
+                : `${resolveBilingual(event?.title)} has ended and registrations are now permanently closed.`
+              : isNotStarted
               ? lang === 'bn'
                 ? `${resolveBilingual(event?.title)} এর অনলাইন নিবন্ধন শুরু হবে: ${new Date(
                     event!.registrationStartDate!
@@ -475,6 +573,7 @@ export default function RegistrationPage() {
                   <input
                     type="text"
                     required
+                    placeholder={lang === 'bn' ? 'দলনেতা / প্রতিনিধির পুরো নাম' : 'Captain / Representative Full Name'}
                     value={repName}
                     onChange={(e) => setRepName(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
@@ -482,97 +581,199 @@ export default function RegistrationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
-                    {t.registration.phone} *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-black text-[#08143A] dark:text-white">
+                      {t.registration.phone} *
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400 font-bold">
+                      {teamPhone.length}/10
+                    </span>
+                  </div>
                   <input
                     type="tel"
                     required
-                    placeholder={lang === 'bn' ? '১০ সংখ্যার মোবাইল নম্বর' : '10-digit Phone Number'}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder={lang === 'bn' ? '১০ সংখ্যার মোবাইল নম্বর (উদাঃ 9876543210)' : '10-digit Phone Number'}
                     value={teamPhone}
-                    onChange={(e) => setTeamPhone(e.target.value)}
+                    onChange={(e) => setTeamPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
                   />
+                  {teamPhone.length > 0 && teamPhone.length < 10 && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1">
+                      {lang === 'bn'
+                        ? `আরও ${10 - teamPhone.length} টি সংখ্যা দিন (সঠিক ১০ ডিজিট প্রয়োজন)`
+                        : `${10 - teamPhone.length} more digits needed (must be 10 digits)`}
+                    </p>
+                  )}
+                  {teamPhone.length === 10 && (
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>{lang === 'bn' ? 'সঠিক ১০ ডিজিটের নম্বর' : 'Valid 10-digit number'}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
-                    {t.registration.email} *
+                  <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1 flex items-center justify-between">
+                    <span>{t.registration.email} *</span>
+                    {user?.email && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>{lang === 'bn' ? 'স্বয়ংক্রিয়ভাবে সংযুক্ত' : 'Auto-filled via Google'}</span>
+                      </span>
+                    )}
                   </label>
                   <input
                     type="email"
                     required
+                    disabled={Boolean(user?.email)}
+                    readOnly={Boolean(user?.email)}
                     value={teamEmail}
                     onChange={(e) => setTeamEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522] disabled:opacity-75 disabled:cursor-not-allowed disabled:bg-slate-200/60 dark:disabled:bg-[#07102b] select-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
-                    {t.registration.emergencyPhone} *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-black text-[#08143A] dark:text-white">
+                      {t.registration.emergencyPhone} *
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400 font-bold">
+                      {emergencyPhone.length}/10
+                    </span>
+                  </div>
                   <input
                     type="tel"
                     required
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder={t.registration.emergencyPhonePlaceholder || (lang === 'bn' ? '১০ সংখ্যার বিকল্প/জরুরি ফোন নম্বর' : '10-digit Emergency Phone Number')}
                     value={emergencyPhone}
-                    onChange={(e) => setEmergencyPhone(e.target.value)}
+                    onChange={(e) => setEmergencyPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522] focus:ring-1 focus:ring-[#F26522]"
                   />
+                  {emergencyPhone.length > 0 && emergencyPhone.length < 10 && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1">
+                      {lang === 'bn'
+                        ? `আরও ${10 - emergencyPhone.length} টি সংখ্যা দিন (সঠিক ১০ ডিজিট প্রয়োজন)`
+                        : `${10 - emergencyPhone.length} more digits needed (must be 10 digits)`}
+                    </p>
+                  )}
+                  {emergencyPhone.length === 10 && (
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>{lang === 'bn' ? 'সঠিক ১০ ডিজিটের নম্বর' : 'Valid 10-digit number'}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Dynamic Players Squad List */}
-              <div className="pt-4 border-t border-[#cbd9ec] dark:border-[#1d3575] space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-black text-[#08143A] dark:text-white text-base">
-                      {t.registration.playersSection} ({players.length} {lang === 'bn' ? 'জন' : 'Players'})
-                    </h4>
-                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8] font-semibold">
-                      {lang === 'bn'
-                        ? `নূন্যতম ${event?.minPlayers || 11} জন এবং সর্বোচ্চ ${event?.maxPlayers || 15} জন`
-                        : `Minimum ${event?.minPlayers || 11} and maximum ${event?.maxPlayers || 15} players`}
-                    </p>
+              {/* Dynamic Players Squad List (Only shown if requireSquad is enabled) */}
+              {event?.formPresets?.requireSquad !== false && (
+                <div className="pt-4 border-t border-[#cbd9ec] dark:border-[#1d3575] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-black text-[#08143A] dark:text-white text-base">
+                        {t.registration.playersSection} ({event?.maxPlayers || players.length} {lang === 'bn' ? 'জন' : 'Players'})
+                      </h4>
+                      <p className="text-xs text-[#64748B] dark:text-[#94A3B8] font-semibold">
+                        {lang === 'bn'
+                          ? `১ থেকে ${event?.minPlayers || 11} জন খেলোয়াড় পূরণ বাধ্যতামূলক (*), এবং ${(event?.minPlayers || 11) + 1} থেকে ${event?.maxPlayers || 15} জন পর্যন্ত ঐচ্ছিক (Optional)।`
+                          : `Players 1 to ${event?.minPlayers || 11} are required (*), and ${(event?.minPlayers || 11) + 1} to ${event?.maxPlayers || 15} are optional.`}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#e6eef8] dark:bg-[#112766] text-[#19398A] dark:text-cyan-300 border border-[#cbd9ec] dark:border-[#1d3575]">
+                        {event?.minPlayers || 11} {lang === 'bn' ? 'বাধ্যতামূলক' : 'Required'} • {Math.max(0, (event?.maxPlayers || 15) - (event?.minPlayers || 11))} {lang === 'bn' ? 'ঐচ্ছিক' : 'Optional'}
+                      </span>
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddPlayer}
-                    disabled={players.length >= (event?.maxPlayers || 15)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-black bg-[#19398A] text-white hover:bg-[#122b6a] disabled:opacity-40 flex items-center gap-1 shadow-sm"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{t.registration.addPlayer}</span>
-                  </button>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {players.map((player, idx) => {
+                      const isRequired = idx < (event?.minPlayers || 11);
+                      const placeholderText =
+                        idx === 0
+                          ? lang === 'bn'
+                            ? 'Captain * (অধিনায়ক)'
+                            : 'Captain *'
+                          : idx === 1
+                          ? lang === 'bn'
+                            ? 'Vice-Captain * (সহ-অধিনায়ক)'
+                            : 'Vice-Captain *'
+                          : isRequired
+                          ? lang === 'bn'
+                            ? `Player ${idx + 1} * (বাধ্যতামূলক)`
+                            : `Player ${idx + 1} * (Required)`
+                          : lang === 'bn'
+                          ? `Player ${idx + 1} (ঐচ্ছিক)`
+                          : `Player ${idx + 1} (Optional)`;
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {players.map((player, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="w-6 text-xs font-black text-[#64748B] dark:text-[#94A3B8] text-right">
-                        {idx + 1}.
-                      </span>
-                      <input
-                        type="text"
-                        placeholder={lang === 'bn' ? `খেলোয়াড় ${idx + 1} এর পুরো নাম` : `Player ${idx + 1} Full Name`}
-                        value={player.name}
-                        onChange={(e) => handlePlayerNameChange(idx, e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white text-xs sm:text-sm font-semibold focus:border-[#F26522]"
-                      />
-                      {idx >= (event?.minPlayers || 11) && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemovePlayer(idx)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                      return (
+                        <div key={idx} className="flex items-center gap-2">
+                          {idx === 0 ? (
+                            <span
+                              className="px-2 py-1 rounded-lg text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shrink-0 min-w-[76px] text-center"
+                              title={lang === 'bn' ? 'দলের অধিনায়ক (বাধ্যতামূলক)' : 'Team Captain (Required)'}
+                            >
+                              {lang === 'bn' ? '১. Captain *' : '1. Captain *'}
+                            </span>
+                          ) : idx === 1 ? (
+                            <span
+                              className="px-2 py-1 rounded-lg text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 shrink-0 min-w-[76px] text-center"
+                              title={lang === 'bn' ? 'দলের সহ-অধিনায়ক (বাধ্যতামূলক)' : 'Team Vice-Captain (Required)'}
+                            >
+                              {lang === 'bn' ? '২. Vice-Cap *' : '2. Vice-Cap *'}
+                            </span>
+                          ) : (
+                            <div className="flex items-center gap-1 shrink-0 min-w-[36px] justify-end">
+                              <span className="text-xs font-black text-[#64748B] dark:text-[#94A3B8]">
+                                {idx + 1}.
+                              </span>
+                              {isRequired ? (
+                                <span className="text-rose-500 font-black text-xs" title={lang === 'bn' ? 'বাধ্যতামূলক' : 'Required'}>
+                                  *
+                                </span>
+                              ) : (
+                                <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                                  {lang === 'bn' ? 'ঐচ্ছিক' : 'Opt'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          <input
+                            type="text"
+                            required={isRequired}
+                            placeholder={placeholderText}
+                            value={player.name}
+                            onChange={(e) => handlePlayerNameChange(idx, e.target.value)}
+                            className={`flex-1 px-3 py-2 rounded-xl border bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white text-xs sm:text-sm font-semibold focus:border-[#F26522] ${
+                              isRequired
+                                ? 'border-[#cbd9ec] dark:border-[#1d3575]'
+                                : 'border-dashed border-slate-300 dark:border-slate-700'
+                            }`}
+                          />
+
+                          {!isRequired && player.name && (
+                            <button
+                              type="button"
+                              onClick={() => handlePlayerNameChange(idx, '')}
+                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg shrink-0 transition-colors"
+                              title={lang === 'bn' ? 'নাম মুছুন' : 'Clear name'}
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Dynamic Custom Fields (Configured from Admin Form Builder) */}
               {event?.customFields && event.customFields.length > 0 && (
@@ -662,16 +863,19 @@ export default function RegistrationPage() {
                 </button>
                 <button
                   disabled={
-                    !teamName ||
-                    !teamAddress ||
-                    !teamPhone ||
-                    players.slice(0, event?.minPlayers || 11).some((p) => !p.name.trim()) ||
+                    (event?.formPresets?.requireTeamName !== false && event?.formPresets?.participationType !== 'individual' && !teamName.trim()) ||
+                    (event?.formPresets?.requireAddress !== false && !teamAddress.trim()) ||
+                    (event?.formPresets?.requirePhone !== false && teamPhone.replace(/\D/g, '').length !== 10) ||
+                    (emergencyPhone.trim() !== '' && emergencyPhone.replace(/\D/g, '').length !== 10) ||
+                    !repName.trim() ||
+                    (event?.formPresets?.requireSquad !== false &&
+                      players.slice(0, event?.minPlayers || 11).some((p) => !p.name.trim())) ||
                     Boolean(
                       event?.customFields &&
                         event.customFields.some((f) => f.required && !customFieldValues[f.id])
                     )
                   }
-                  onClick={() => setStep(4)}
+                  onClick={handleNextFromStep3}
                   className="px-7 py-3 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 uppercase tracking-wider text-sm shadow-md"
                 >
                   <span>{t.common.next}</span>
@@ -689,62 +893,93 @@ export default function RegistrationPage() {
                 <h3 className="text-xl">{t.registration.paymentHeading}</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {/* Payment QR & details */}
-                <div className="p-6 rounded-2xl bg-[#f0f4fa] dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] text-center space-y-4">
-                  <div className="inline-block p-3 rounded-xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575]">
-                    <img
-                      src={settings?.payment?.qrCodeUrl || 'https://res.cloudinary.com/demo/image/upload/sample.jpg'}
-                      alt="Payment QR"
-                      className="w-44 h-44 object-contain mx-auto"
-                    />
+              {(event?.registrationFee ?? 0) === 0 || event?.formPresets?.requirePaymentProof === false ? (
+                <div className="p-8 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-md">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
-
-                  <div className="space-y-1 text-xs sm:text-sm font-semibold">
-                    <p className="font-black text-[#F26522] dark:text-[#F9A01B] text-lg">
-                      {t.registration.feeAmount} ₹{event?.registrationFee || 1500}
-                    </p>
-                    <p className="text-[#08143A] dark:text-white">
-                      {t.registration.upiId} <strong>{settings?.payment?.upiId || 'iswampur.cricket@upi'}</strong>
-                    </p>
-                    <p className="text-[#64748B] dark:text-[#94A3B8]">
-                      {t.registration.payeeName} {settings?.payment?.payeeName || 'Iswampur Sports'}
-                    </p>
-                  </div>
+                  <h4 className="text-lg font-black text-emerald-900 dark:text-emerald-300">
+                    {lang === 'bn' ? 'বিনামূল্যে রেজিস্ট্রেশন (Free Registration)' : 'Free Event Registration'}
+                  </h4>
+                  <p className="text-xs text-emerald-800 dark:text-emerald-400 max-w-md mx-auto">
+                    {lang === 'bn'
+                      ? 'এই ইভেন্টে কোনো রেজিস্ট্রেশন ফি প্রযোজ্য নয়। কোনো পেমেন্ট বা ইউটিআর জমার প্রয়োজন নেই। সরাসরি নিচের বাটনে ক্লিক করে আবেদন সম্পন্ন করুন।'
+                      : 'No entry fee is required for this event. Simply click submit below to complete your registration.'}
+                  </p>
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  {/* Payment QR & details */}
+                  <div className="p-6 rounded-2xl bg-[#f0f4fa] dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] text-center space-y-4">
+                    <div className="inline-block p-3 rounded-xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575]">
+                      <img
+                        src={settings?.payment?.qrCodeUrl || 'https://res.cloudinary.com/demo/image/upload/sample.jpg'}
+                        alt="Payment QR"
+                        className="w-44 h-44 object-contain mx-auto"
+                      />
+                    </div>
 
-                {/* Upload & UTR inputs */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
-                      {t.registration.utrLabel} *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={lang === 'bn' ? '১২ সংখ্যার UTR / ট্রানজ্যাকশন আইডি' : '12-digit UTR / Txn Reference ID'}
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522]"
-                    />
+                    <div className="space-y-1 text-xs sm:text-sm font-semibold">
+                      <p className="font-black text-[#F26522] dark:text-[#F9A01B] text-lg">
+                        {t.registration.feeAmount} ₹{event?.registrationFee || 1500}
+                      </p>
+                      <p className="text-[#08143A] dark:text-white">
+                        {t.registration.upiId} <strong>{settings?.payment?.upiId || 'iswampur.cricket@upi'}</strong>
+                      </p>
+                      <p className="text-[#64748B] dark:text-[#94A3B8]">
+                        {t.registration.payeeName} {settings?.payment?.payeeName || 'Iswampur Sports'}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
-                      {t.registration.screenshotLabel} *
-                    </label>
-                    <div className="border-2 border-dashed border-[#cbd9ec] dark:border-[#1d3575] rounded-2xl p-6 text-center hover:border-[#F26522] transition-colors">
-                      {screenshotUrl ? (
-                        <div className="space-y-3">
-                          <img
-                            src={screenshotUrl}
-                            alt="Screenshot Preview"
-                            className="w-32 h-32 object-cover rounded-xl mx-auto shadow-md"
-                          />
-                          <p className="text-xs text-emerald-600 font-bold">
-                            {lang === 'bn' ? '✓ স্ক্রিনশট সফলভাবে সংযুক্ত হয়েছে' : '✓ Screenshot attached successfully'}
-                          </p>
-                          <label className="text-xs text-[#F26522] underline cursor-pointer font-bold">
-                            {lang === 'bn' ? 'পরিবর্তন করুন' : 'Change screenshot'}
+                  {/* Upload & UTR inputs */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
+                        {t.registration.utrLabel} *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={lang === 'bn' ? '১২ সংখ্যার UTR / ট্রানজ্যাকশন আইডি' : '12-digit UTR / Txn Reference ID'}
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-sm focus:border-[#F26522]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-[#08143A] dark:text-white mb-1">
+                        {t.registration.screenshotLabel} *
+                      </label>
+                      <div className="border-2 border-dashed border-[#cbd9ec] dark:border-[#1d3575] rounded-2xl p-6 text-center hover:border-[#F26522] transition-colors">
+                        {screenshotUrl ? (
+                          <div className="space-y-3">
+                            <img
+                              src={screenshotUrl}
+                              alt="Screenshot Preview"
+                              className="w-32 h-32 object-cover rounded-xl mx-auto shadow-md"
+                            />
+                            <p className="text-xs text-emerald-600 font-bold">
+                              {lang === 'bn' ? '✓ স্ক্রিনশট সফলভাবে সংযুক্ত হয়েছে' : '✓ Screenshot attached successfully'}
+                            </p>
+                            <label className="text-xs text-[#F26522] underline cursor-pointer font-bold">
+                              {lang === 'bn' ? 'পরিবর্তন করুন' : 'Change screenshot'}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handleScreenshotUpload}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer space-y-2 block">
+                            <Upload className="w-8 h-8 text-[#64748B] dark:text-[#94A3B8] mx-auto" />
+                            <p className="text-xs sm:text-sm font-bold text-[#08143A] dark:text-white">
+                              {uploadingScreenshot
+                                ? t.registration.uploading
+                                : (lang === 'bn' ? 'ক্লিক করে স্ক্রিনশট ফাইল নির্বাচন করুন' : 'Click to upload payment screenshot')}
+                            </p>
                             <input
                               type="file"
                               accept="image/jpeg,image/png,image/webp"
@@ -752,27 +987,12 @@ export default function RegistrationPage() {
                               className="hidden"
                             />
                           </label>
-                        </div>
-                      ) : (
-                        <label className="cursor-pointer space-y-2 block">
-                          <Upload className="w-8 h-8 text-[#64748B] dark:text-[#94A3B8] mx-auto" />
-                          <p className="text-xs sm:text-sm font-bold text-[#08143A] dark:text-white">
-                            {uploadingScreenshot
-                              ? t.registration.uploading
-                              : (lang === 'bn' ? 'ক্লিক করে স্ক্রিনশট ফাইল নির্বাচন করুন' : 'Click to upload payment screenshot')}
-                          </p>
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleScreenshotUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex justify-between pt-6 border-t border-[#cbd9ec] dark:border-[#1d3575]">
                 <button
@@ -782,7 +1002,12 @@ export default function RegistrationPage() {
                   ← {t.common.back}
                 </button>
                 <button
-                  disabled={submitting || !screenshotUrl}
+                  disabled={
+                    submitting ||
+                    ((event?.registrationFee ?? 0) > 0 &&
+                      event?.formPresets?.requirePaymentProof !== false &&
+                      !screenshotUrl)
+                  }
                   onClick={handleSubmitRegistration}
                   className="px-8 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-40 transition-all shadow-lg flex items-center gap-2 uppercase tracking-wider text-sm"
                 >

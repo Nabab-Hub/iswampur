@@ -21,25 +21,43 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      return new Promise<{ url: string; publicId: string }>((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder,
-            resource_type: 'auto',
-          },
-          (error, result) => {
-            if (error || !result) {
-              reject(error || new Error('Upload failed'));
-            } else {
-              resolve({
-                url: result.secure_url,
-                publicId: result.public_id,
-              });
-            }
-          }
-        );
-        stream.end(buffer);
-      });
+      if (
+        process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY &&
+        process.env.CLOUDINARY_API_SECRET
+      ) {
+        try {
+          const res = await new Promise<{ url: string; publicId: string }>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder,
+                resource_type: 'auto',
+              },
+              (error, result) => {
+                if (error || !result) {
+                  reject(error || new Error('Upload failed'));
+                } else {
+                  resolve({
+                    url: result.secure_url,
+                    publicId: result.public_id,
+                  });
+                }
+              }
+            );
+            stream.end(buffer);
+          });
+          return res;
+        } catch (cloudErr) {
+          console.warn('Cloudinary upload failed, falling back to data URL:', cloudErr);
+        }
+      }
+
+      const base64 = buffer.toString('base64');
+      const mimeType = file.type || 'image/jpeg';
+      return {
+        url: `data:${mimeType};base64,${base64}`,
+        publicId: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      };
     });
 
     const results = await Promise.all(uploadPromises);

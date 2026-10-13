@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/lib/i18n/context';
@@ -17,22 +17,34 @@ import {
   X,
   ExternalLink,
   Loader2,
+  ChevronDown,
+  Calendar,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
 function RegistrationsReviewContent() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('id');
+  const eventIdParam = searchParams.get('eventId');
 
   const { lang, t } = useLanguage();
   const toast = useToast();
   const { user, hasPermission } = useAuth();
   const [registrations, setRegistrations] = useState<TeamRegistration[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter & Search
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [eventFilter, setEventFilter] = useState(eventIdParam || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Event Dropdown Search & Combobox State
+  const [eventDropdownOpen, setEventDropdownOpen] = useState(false);
+  const [eventSearchQuery, setEventSearchQuery] = useState('');
+  const eventDropdownRef = useRef<HTMLDivElement>(null);
 
   // Review Modal State
   const [selectedReg, setSelectedReg] = useState<TeamRegistration | null>(null);
@@ -43,7 +55,10 @@ function RegistrationsReviewContent() {
 
   const loadRegistrations = async () => {
     try {
-      const res = await fetch('/api/registrations');
+      const [res, evRes] = await Promise.all([
+        fetch('/api/registrations'),
+        fetch('/api/events'),
+      ]);
       if (res.ok) {
         const data: TeamRegistration[] = await res.json();
         setRegistrations(data);
@@ -51,6 +66,10 @@ function RegistrationsReviewContent() {
           const found = data.find((r) => r.id === highlightId);
           if (found) setSelectedReg(found);
         }
+      }
+      if (evRes.ok) {
+        const evData = await evRes.json();
+        setEvents(evData);
       }
     } catch (err) {
       console.error('Failed to load registrations:', err);
@@ -60,8 +79,57 @@ function RegistrationsReviewContent() {
   };
 
   useEffect(() => {
+    if (eventIdParam) {
+      setEventFilter(eventIdParam);
+    }
+  }, [eventIdParam]);
+
+  useEffect(() => {
     loadRegistrations();
   }, [highlightId]);
+
+  // Click outside to close custom event dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (eventDropdownRef.current && !eventDropdownRef.current.contains(event.target as Node)) {
+        setEventDropdownOpen(false);
+      }
+    }
+    if (eventDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [eventDropdownOpen]);
+
+  // Sort and filter events: Active registrations at the TOP with badge, followed by others, searchable
+  const { activeEvents, otherEvents, selectedEventObj } = useMemo(() => {
+    const q = eventSearchQuery.toLowerCase().trim();
+
+    const matchesSearch = (ev: any) => {
+      if (!q) return true;
+      const titleBn = ev.title?.bn?.toLowerCase() || '';
+      const titleEn = ev.title?.en?.toLowerCase() || '';
+      const venueBn = ev.venue?.bn?.toLowerCase() || '';
+      const venueEn = ev.venue?.en?.toLowerCase() || '';
+      return titleBn.includes(q) || titleEn.includes(q) || venueBn.includes(q) || venueEn.includes(q);
+    };
+
+    const active = events.filter((e) => e.registrationEnabled && matchesSearch(e));
+    const others = events.filter((e) => !e.registrationEnabled && matchesSearch(e));
+    const selected = events.find((e) => e.id === eventFilter);
+
+    return {
+      activeEvents: active,
+      otherEvents: others,
+      selectedEventObj: selected,
+    };
+  }, [events, eventFilter, eventSearchQuery]);
+
+  const getEventRegCount = (eventId: string) => {
+    return registrations.filter((r) => r.eventId === eventId).length;
+  };
 
   const handleReviewSubmit = async () => {
     if (!selectedReg || !reviewAction) return;
@@ -143,6 +211,7 @@ function RegistrationsReviewContent() {
 
   const filtered = registrations.filter((r) => {
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
+    const matchesEvent = eventFilter === 'ALL' || r.eventId === eventFilter;
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
       !q ||
@@ -151,13 +220,13 @@ function RegistrationsReviewContent() {
       r.team.phone.includes(q) ||
       r.id.toLowerCase().includes(q) ||
       (r.payment.utr && r.payment.utr.toLowerCase().includes(q));
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesEvent && matchesSearch;
   });
 
   const getStatusLabel = (st: string) => {
     switch (st) {
       case 'ALL':
-        return lang === 'bn' ? 'সকল' : 'All';
+        return lang === 'bn' ? 'সকল অবস্থা' : 'All Status';
       case 'PENDING_REVIEW':
         return lang === 'bn' ? 'যাচাইনাধীন' : 'Pending';
       case 'APPROVED':
@@ -169,6 +238,12 @@ function RegistrationsReviewContent() {
       default:
         return st;
     }
+  };
+
+  const getEventName = (eventId: string) => {
+    const ev = events.find((e) => e.id === eventId);
+    if (!ev) return eventId === 'event-ipl-2026' ? 'IPL 2026' : eventId;
+    return lang === 'bn' ? ev.title.bn : ev.title.en;
   };
 
   return (
@@ -204,25 +279,245 @@ function RegistrationsReviewContent() {
       )}
 
       {/* Filter & Search Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xs">
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-[#64748B] dark:text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder={lang === 'bn' ? 'দলের নাম, মোবাইল বা UTR...' : 'Search squad, phone or UTR...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-xs focus:border-[#F26522]"
-          />
+      <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] flex flex-col lg:flex-row gap-3 items-center justify-between shadow-xs">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-[#64748B] dark:text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder={lang === 'bn' ? 'দলের নাম, মোবাইল বা UTR...' : 'Search squad, phone or UTR...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-semibold text-xs focus:border-[#F26522]"
+            />
+          </div>
+
+          {/* Custom Searchable Event Combobox with Active Events on Top & Active Badges */}
+          <div className="relative w-full sm:w-auto" ref={eventDropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setEventDropdownOpen(!eventDropdownOpen);
+                if (!eventDropdownOpen) setEventSearchQuery('');
+              }}
+              className="w-full sm:w-auto min-w-[210px] max-w-full sm:max-w-[320px] px-3 py-2 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-[#f0f4fa] dark:bg-[#071333] text-[#08143A] dark:text-white font-bold text-xs flex items-center justify-between gap-2 hover:border-[#19398A] dark:hover:border-cyan-400/50 transition-all shadow-xs text-left"
+            >
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
+                <Calendar className="w-3.5 h-3.5 text-[#19398A] dark:text-cyan-400 shrink-0" />
+                <span className="truncate">
+                  {selectedEventObj
+                    ? (lang === 'bn' ? selectedEventObj.title.bn : selectedEventObj.title.en)
+                    : (lang === 'bn' ? 'সকল ইভেন্ট / অনুষ্ঠান' : 'All Events')}
+                </span>
+                {selectedEventObj?.registrationEnabled && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Active
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                {eventFilter !== 'ALL' && (
+                  <span
+                    role="button"
+                    title={lang === 'bn' ? 'ফিল্টার মুছুন' : 'Clear filter'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEventFilter('ALL');
+                    }}
+                    className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </span>
+                )}
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                    eventDropdownOpen ? 'rotate-180 text-[#19398A] dark:text-cyan-400' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {/* Dropdown Popover */}
+            {eventDropdownOpen && (
+              <div className="absolute left-0 sm:left-0 mt-1.5 w-full sm:w-[350px] max-w-[95vw] bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                {/* Search Input Inside Dropdown */}
+                <div className="p-2.5 border-b border-[#cbd9ec] dark:border-[#1d3575] bg-[#f8fafc] dark:bg-[#071333]">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder={lang === 'bn' ? 'ইভেন্টের নাম দিয়ে খুঁজুন...' : 'Search event by name...'}
+                      value={eventSearchQuery}
+                      onChange={(e) => setEventSearchQuery(e.target.value)}
+                      autoFocus
+                      className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-[#cbd9ec] dark:border-[#1d3575] bg-white dark:bg-[#0c1a40] text-[#08143A] dark:text-white text-xs font-semibold focus:outline-none focus:border-[#19398A] dark:focus:border-cyan-400"
+                    />
+                    {eventSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setEventSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Event Options List */}
+                <div className="max-h-[300px] overflow-y-auto divide-y divide-[#edf2f9] dark:divide-[#12234e] text-xs">
+                  {/* All Events Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEventFilter('ALL');
+                      setEventDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-colors ${
+                      eventFilter === 'ALL'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-[#19398A] dark:text-cyan-300 font-bold'
+                        : 'hover:bg-slate-50 dark:hover:bg-[#112766] text-[#08143A] dark:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span className="font-bold">{lang === 'bn' ? 'সকল ইভেন্ট / অনুষ্ঠান' : 'All Events'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold">
+                        {registrations.length} {lang === 'bn' ? 'দল' : 'teams'}
+                      </span>
+                      {eventFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-[#19398A] dark:text-cyan-400" />}
+                    </div>
+                  </button>
+
+                  {/* Active Events Section (TOP) */}
+                  {activeEvents.length > 0 && (
+                    <div className="p-1">
+                      <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/30 rounded flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>{lang === 'bn' ? 'চলমান রেজিস্ট্রেশন (Active)' : 'Active Registrations (Top)'}</span>
+                        <span className="ml-auto text-[10px] font-bold">({activeEvents.length})</span>
+                      </div>
+                      <div className="mt-1 space-y-0.5">
+                        {activeEvents.map((ev) => {
+                          const isSelected = eventFilter === ev.id;
+                          const regCount = getEventRegCount(ev.id);
+                          return (
+                            <button
+                              key={ev.id}
+                              type="button"
+                              onClick={() => {
+                                setEventFilter(ev.id);
+                                setEventDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-left transition-colors ${
+                                isSelected
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 font-bold'
+                                  : 'hover:bg-slate-50 dark:hover:bg-[#112766] text-[#08143A] dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="min-w-0 pr-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="truncate font-semibold text-xs">
+                                    {lang === 'bn' ? ev.title.bn : ev.title.en}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0">
+                                    Active
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  {ev.venue ? (lang === 'bn' ? ev.venue.bn : ev.venue.en) : ''}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  {regCount} {lang === 'bn' ? 'দল' : 'teams'}
+                                </span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Other / Completed Events Section */}
+                  {otherEvents.length > 0 && (
+                    <div className="p-1">
+                      <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100/60 dark:bg-slate-800/40 rounded flex items-center gap-1.5">
+                        <Calendar className="w-2.5 h-2.5 text-slate-400" />
+                        <span>{lang === 'bn' ? 'অন্যান্য ও অতীত ইভেন্ট' : 'Other / Past Events'}</span>
+                        <span className="ml-auto text-[10px] font-bold">({otherEvents.length})</span>
+                      </div>
+                      <div className="mt-1 space-y-0.5">
+                        {otherEvents.map((ev) => {
+                          const isSelected = eventFilter === ev.id;
+                          const regCount = getEventRegCount(ev.id);
+                          return (
+                            <button
+                              key={ev.id}
+                              type="button"
+                              onClick={() => {
+                                setEventFilter(ev.id);
+                                setEventDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-left transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-50 dark:bg-blue-950/40 text-[#19398A] dark:text-cyan-300 font-bold'
+                                  : 'hover:bg-slate-50 dark:hover:bg-[#112766] text-[#08143A] dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="min-w-0 pr-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="truncate font-medium text-xs">
+                                    {lang === 'bn' ? ev.title.bn : ev.title.en}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+                                    {lang === 'bn' ? 'সমাপ্ত' : 'Closed'}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  {ev.venue ? (lang === 'bn' ? ev.venue.bn : ev.venue.en) : ''}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  {regCount} {lang === 'bn' ? 'দল' : 'teams'}
+                                </span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-[#19398A] dark:text-cyan-400" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty Search Result */}
+                  {activeEvents.length === 0 && otherEvents.length === 0 && (
+                    <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                      {lang === 'bn'
+                        ? `"${eventSearchQuery}" নামে কোনো ইভেন্ট পাওয়া যায়নি`
+                        : `No events found matching "${eventSearchQuery}"`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
-          <Filter className="w-4 h-4 text-[#64748B] dark:text-[#94A3B8] shrink-0" />
+        <div className="flex items-center gap-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
+          <Filter className="w-4 h-4 text-[#64748B] dark:text-[#94A3B8] shrink-0 mr-1" />
           {['ALL', 'PENDING_REVIEW', 'APPROVED', 'CORRECTION_REQUIRED', 'REJECTED'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black shrink-0 transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-black shrink-0 transition-colors ${
                 statusFilter === st
                   ? 'bg-[#19398A] text-white shadow-xs'
                   : 'bg-[#e6eef8] dark:bg-[#112766] text-[#273656] dark:text-[#CBD5E1] hover:text-[#08143A] dark:hover:text-white'
@@ -240,7 +535,7 @@ function RegistrationsReviewContent() {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f0f4fa] dark:bg-[#071333] text-[#64748B] dark:text-[#94A3B8] font-black uppercase">
               <tr>
-                <th className="p-3.5">{lang === 'bn' ? 'দলের নাম' : 'Team Name'}</th>
+                <th className="p-3.5">{lang === 'bn' ? 'দলের নাম ও ইভেন্ট' : 'Team & Event'}</th>
                 <th className="p-3.5">{lang === 'bn' ? 'দল প্রতিনিধি' : 'Representative'}</th>
                 <th className="p-3.5">{lang === 'bn' ? 'মোবাইল' : 'Phone'}</th>
                 <th className="p-3.5">{lang === 'bn' ? 'সদস্য' : 'Players'}</th>
@@ -254,7 +549,12 @@ function RegistrationsReviewContent() {
                 <tr key={reg.id} className="hover:bg-[#f0f4fa] dark:hover:bg-[#0a1945]">
                   <td className="p-3.5">
                     <p className="font-black text-[#08143A] dark:text-white">{reg.team.name}</p>
-                    <p className="font-mono text-[10px] text-[#64748B] dark:text-[#94A3B8]">{reg.id}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="font-mono text-[10px] text-[#64748B] dark:text-[#94A3B8]">{reg.id}</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded font-black bg-[#19398A]/10 text-[#19398A] dark:bg-[#19398A]/30 dark:text-[#00A3E0] truncate max-w-[160px]">
+                        {getEventName(reg.eventId)}
+                      </span>
+                    </div>
                   </td>
                   <td className="p-3.5 text-[#273656] dark:text-[#CBD5E1] font-semibold">
                     {reg.team.representativeName}
@@ -400,7 +700,23 @@ function RegistrationsReviewContent() {
                     className="p-2 rounded-lg bg-[#f0f4fa] dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] text-xs flex justify-between items-center"
                   >
                     <span className="font-semibold">{idx + 1}. {m.name}</span>
-                    {m.role && <span className="text-[10px] text-[#F26522] uppercase font-bold">{m.role}</span>}
+                    {m.role && (
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          m.role === 'captain' || idx === 0
+                            ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
+                            : m.role === 'vice_captain' || idx === 1
+                            ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                            : 'text-[#64748B] dark:text-[#94A3B8]'
+                        }`}
+                      >
+                        {m.role === 'captain' || idx === 0
+                          ? 'Captain (C)'
+                          : m.role === 'vice_captain' || idx === 1
+                          ? 'Vice-Cap (VC)'
+                          : m.role}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

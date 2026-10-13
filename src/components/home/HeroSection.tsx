@@ -14,10 +14,22 @@ interface HeroSectionProps {
 export default function HeroSection({ featuredEvent }: HeroSectionProps) {
   const { lang, t, resolveBilingual } = useLanguage();
 
-  const isRegistrationOpen =
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isEventEnded = Boolean(
+    featuredEvent?.endDate
+      ? featuredEvent.endDate < todayStr
+      : featuredEvent?.startDate
+      ? featuredEvent.startDate < todayStr
+      : false
+  );
+  const isDraft = featuredEvent?.status === 'draft' || featuredEvent?.published === false;
+  const isRegistrationOpen = Boolean(
     featuredEvent?.registrationEnabled &&
-    (!featuredEvent.registrationDeadline ||
-      new Date(featuredEvent.registrationDeadline) > new Date());
+      !isDraft &&
+      !isEventEnded &&
+      (!featuredEvent.registrationStartDate || new Date(featuredEvent.registrationStartDate) <= new Date()) &&
+      (!featuredEvent.registrationDeadline || new Date(featuredEvent.registrationDeadline) > new Date())
+  );
 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24">

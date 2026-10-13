@@ -93,6 +93,7 @@ export const bn = {
     phone: 'মোবাইল নম্বর (হোয়াটসঅ্যাপ)',
     emergencyName: 'জরুরি যোগাযোগের ব্যক্তি',
     emergencyPhone: 'জরুরি মোবাইল নম্বর',
+    emergencyPhonePlaceholder: '১০ সংখ্যার বিকল্প/জরুরি ফোন নম্বর',
     playersSection: 'খেলোয়াড় তালিকা',
     addPlayer: 'খেলোয়াড় যোগ করুন',
     removePlayer: 'মুছুন',

@@ -216,27 +216,6 @@ export default function Navbar() {
                   <span>{t.nav.signIn}</span>
                 </button>
               )}
-
-              {/* Direct Super Admin Quick Button on Desktop */}
-              {isSuperAdmin && (
-                <Link
-                  href="/super-admin"
-                  className="h-9 px-3 rounded-xl text-xs font-black uppercase tracking-wider text-[#F26522] hover:bg-[#F26522]/10 border border-[#F26522]/30 transition-all flex items-center gap-1.5 whitespace-nowrap shadow-xs"
-                  title="Super Admin Control Panel"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#F26522]" />
-                  <span>{t.nav.superAdmin}</span>
-                </Link>
-              )}
-
-              {/* Quick Register CTA Button */}
-              <Link
-                href="/register/iswampur-premier-league-2026"
-                className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#F26522]/20 bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <Trophy className="w-3.5 h-3.5 text-white" />
-                <span>{t.nav.registerNow}</span>
-              </Link>
             </div>
 
             {/* Mobile menu trigger - High Visibility 3-bar Hamburger */}

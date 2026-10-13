@@ -118,6 +118,23 @@ export interface FormFieldDefinition {
   order: number;
 }
 
+export interface EventFormPresets {
+  participationType?: 'team' | 'individual' | 'both';
+  requireTeamName?: boolean;
+  requireCaptain?: boolean;
+  requirePhone?: boolean;
+  requireWhatsApp?: boolean;
+  requireEmail?: boolean;
+  requireAddress?: boolean;
+  requireEmergencyContact?: boolean;
+  requireSquad?: boolean;
+  requireJerseySize?: boolean;
+  requireAgeGroup?: boolean;
+  requirePaymentProof?: boolean;
+  requireIdProof?: boolean;
+  requireNotes?: boolean;
+}
+
 export interface VillageEvent {
   id: string;
   slug: string;
@@ -135,6 +152,7 @@ export interface VillageEvent {
   featured: boolean;
   showInHero: boolean;
   published: boolean;
+  status?: 'published' | 'draft' | 'completed' | 'archived';
   registrationEnabled: boolean;
   registrationStartDate?: string;
   registrationDeadline?: string;
@@ -145,6 +163,7 @@ export interface VillageEvent {
   rules?: BilingualText;
   rulesVersion?: string;
   customFields?: FormFieldDefinition[];
+  formPresets?: EventFormPresets;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

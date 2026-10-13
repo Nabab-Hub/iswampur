@@ -95,6 +95,7 @@ export const en: typeof bn = {
     phone: 'WhatsApp / Mobile Number',
     emergencyName: 'Emergency Contact Person',
     emergencyPhone: 'Emergency Phone Number',
+    emergencyPhonePlaceholder: '10-digit Emergency Phone Number',
     playersSection: 'Squad Members',
     addPlayer: 'Add Player',
     removePlayer: 'Remove',

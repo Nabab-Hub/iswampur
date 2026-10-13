@@ -65,9 +65,18 @@ export default function EventDetailPage() {
     );
   }
 
-  const isRegistrationOpen =
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isEventEnded = Boolean(
+    event.endDate ? event.endDate < todayStr : event.startDate ? event.startDate < todayStr : false
+  );
+  const isDraft = event.status === 'draft' || event.published === false;
+  const isRegistrationOpen = Boolean(
     event.registrationEnabled &&
-    (!event.registrationDeadline || new Date(event.registrationDeadline) > new Date());
+      !isDraft &&
+      !isEventEnded &&
+      (!event.registrationStartDate || new Date(event.registrationStartDate) <= new Date()) &&
+      (!event.registrationDeadline || new Date(event.registrationDeadline) > new Date())
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f4fa] dark:bg-[#050d24] transition-colors">

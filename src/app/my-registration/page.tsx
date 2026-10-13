@@ -316,8 +316,20 @@ function MyRegistrationContent() {
                               {idx + 1}. {player.name}
                             </span>
                             {player.role && player.role !== 'player' && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-[#19398A] text-white">
-                                {player.role}
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                  player.role === 'captain'
+                                    ? 'bg-amber-500 text-white'
+                                    : player.role === 'vice_captain'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-[#19398A] text-white'
+                                }`}
+                              >
+                                {player.role === 'captain'
+                                  ? 'Captain (C)'
+                                  : player.role === 'vice_captain'
+                                  ? 'Vice-Cap (VC)'
+                                  : player.role}
                               </span>
                             )}
                           </div>

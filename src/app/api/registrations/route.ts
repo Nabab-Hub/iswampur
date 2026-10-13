@@ -37,6 +37,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate phone number to be 10 digits if provided
+    if (body.team?.phone) {
+      const cleanPhone = String(body.team.phone).replace(/\D/g, '');
+      if (cleanPhone.length !== 10) {
+        return NextResponse.json(
+          { error: 'মোবাইল নম্বরটি অবশ্যই সঠিক ১০ ডিজিটের হতে হবে (Mobile number must be exactly 10 digits).' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate emergency phone number to be 10 digits if provided
+    if (body.team?.emergencyPhone) {
+      const cleanEmerPhone = String(body.team.emergencyPhone).replace(/\D/g, '');
+      if (cleanEmerPhone.length !== 10) {
+        return NextResponse.json(
+          { error: 'জরুরি মোবাইল নম্বরটি অবশ্যই সঠিক ১০ ডিজিটের হতে হবে (Emergency phone must be exactly 10 digits).' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check duplicate team name or active registration for same user on same event
     const existingForEvent = await repository.getRegistrations({
       eventId: body.eventId,
