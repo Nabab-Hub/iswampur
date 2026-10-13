@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/lib/i18n/context';
@@ -26,9 +26,34 @@ import {
   X,
 } from 'lucide-react';
 
-export default function RegistrationPage() {
+function GoogleIcon({ className = "w-4 h-4 shrink-0" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12c0 2.03.45 3.84 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
+
+function RegistrationContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params?.slug as string;
+  const editId = searchParams?.get('edit');
   const router = useRouter();
   const { lang, t, resolveBilingual } = useLanguage();
   const { user, signInWithGoogle } = useAuth();
@@ -40,6 +65,10 @@ export default function RegistrationPage() {
   // Stepper state (1 to 5)
   const [step, setStep] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Correction Mode & Previous Review Note
+  const [editingRegId, setEditingRegId] = useState<string | null>(null);
+  const [adminCorrectionNote, setAdminCorrectionNote] = useState<string | null>(null);
 
   // Team Form State
   const [teamName, setTeamName] = useState('');
@@ -92,6 +121,34 @@ export default function RegistrationPage() {
           const settsData = await settingsRes.json();
           setSettings(settsData);
         }
+
+        // If in edit / correction mode, load existing registration details
+        if (editId) {
+          try {
+            const regRes = await fetch(`/api/registrations/${editId}`);
+            if (regRes.ok) {
+              const regData = await regRes.json();
+              setEditingRegId(regData.id);
+              if (regData.team?.name) setTeamName(regData.team.name);
+              if (regData.team?.address) setTeamAddress(regData.team.address);
+              if (regData.team?.representativeName) setRepName(regData.team.representativeName);
+              if (regData.team?.email) setTeamEmail(regData.team.email);
+              if (regData.team?.phone) setTeamPhone(regData.team.phone);
+              if (regData.team?.emergencyName) setEmergencyName(regData.team.emergencyName);
+              if (regData.team?.emergencyPhone) setEmergencyPhone(regData.team.emergencyPhone);
+              if (regData.team?.members && regData.team.members.length > 0) {
+                setPlayers(regData.team.members);
+              }
+              if (regData.customFieldValues) setCustomFieldValues(regData.customFieldValues);
+              if (regData.payment?.utr) setUtrNumber(regData.payment.utr);
+              if (regData.payment?.screenshotUrl) setScreenshotUrl(regData.payment.screenshotUrl);
+              if (regData.reviewNote) setAdminCorrectionNote(regData.reviewNote);
+              setTermsAccepted(true);
+            }
+          } catch (e) {
+            console.error('Failed to load edit registration:', e);
+          }
+        }
       } catch (err) {
         console.error('Failed to load event data:', err);
       } finally {
@@ -99,7 +156,7 @@ export default function RegistrationPage() {
       }
     }
     loadData();
-  }, [slug]);
+  }, [slug, editId]);
 
   // Synchronize players count strictly with event.maxPlayers configuration
   useEffect(() => {
@@ -247,7 +304,9 @@ export default function RegistrationPage() {
         : [{ name: repName.trim() || user.displayName || 'Participant', role: 'captain' }];
 
       const payload = {
+        id: editingRegId || undefined,
         eventId: event.id,
+        eventSlug: event.slug || slug,
         ownerUid: user.uid,
         ownerEmail: user.email,
         language: lang,
@@ -438,6 +497,65 @@ export default function RegistrationPage() {
                 <h3 className="text-xl">{t.registration.step1}</h3>
               </div>
 
+              {/* Admin Correction Note Banner if in edit mode */}
+              {adminCorrectionNote && (
+                <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/15 border-2 border-[#F9A01B] space-y-2 text-left animate-in fade-in">
+                  <div className="flex items-center gap-2 text-[#F9A01B] font-black text-sm">
+                    <AlertCircle className="w-5 h-5 shrink-0" />
+                    <span>{lang === 'bn' ? 'অ্যাডমিন নির্দেশিত সংশোধন নোট (Correction Required):' : 'Admin Correction Instructions:'}</span>
+                  </div>
+                  <div className="bg-white dark:bg-[#071333] p-3 rounded-xl border border-amber-300 dark:border-amber-700">
+                    <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
+                      {adminCorrectionNote}
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                    {lang === 'bn'
+                      ? 'দয়া করে পরবর্তী ধাপগুলোতে প্রয়োজনীয় তথ্য সংশোধন করে ফর্মটি পুনরায় জমা দিন।'
+                      : 'Please adjust the necessary details in the next steps and resubmit for immediate re-verification.'}
+                  </p>
+                </div>
+              )}
+
+              {/* Quick Google Sign-In helper at Step 1 */}
+              {!user ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#071333] border border-slate-200 dark:border-[#1d3575] flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#0c1a40] border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 shadow-xs">
+                      <GoogleIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#08143A] dark:text-white">
+                        {lang === 'bn' ? 'গুগল দিয়ে দ্রুত সাইন-ইন' : 'Sign in with Google'}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+                        {lang === 'bn' ? 'যেকোনো সময় গুগল দিয়ে সাইন-ইন করে নিবন্ধন সম্পন্ন করতে পারবেন।' : 'Sign in to auto-fill your email and keep your pass secure.'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={signInWithGoogle}
+                    className="px-4 py-2 rounded-xl text-xs font-black bg-white dark:bg-[#0c1a40] text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 hover:border-[#F26522] shadow-xs flex items-center gap-2 shrink-0 transition-all hover:scale-105"
+                  >
+                    <GoogleIcon className="w-4 h-4" />
+                    <span>{lang === 'bn' ? 'গুগল দিয়ে সাইন-ইন' : 'Sign in with Google'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 px-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                      {lang === 'bn' ? 'গুগল অ্যাকাউন্ট সংযুক্ত:' : 'Connected Account:'} <span className="font-mono font-black">{user.email}</span>
+                    </span>
+                  </div>
+                  <span className="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded">
+                    Verified
+                  </span>
+                </div>
+              )}
+
               <p className="text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold">
                 {t.registration.rulesNotice}
               </p>
@@ -478,33 +596,43 @@ export default function RegistrationPage() {
           {/* ================= STEP 2: GOOGLE AUTH ================= */}
           {step === 2 && (
             <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] space-y-6 text-center shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-[#19398A] text-white flex items-center justify-center mx-auto shadow-md">
-                <User className="w-8 h-8 text-[#F9A01B]" />
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#071333] border border-slate-200 dark:border-[#1d3575] flex items-center justify-center mx-auto shadow-md">
+                <GoogleIcon className="w-8 h-8" />
               </div>
 
               <div className="space-y-2 max-w-md mx-auto">
                 <h3 className="text-xl sm:text-2xl font-black text-[#08143A] dark:text-white">
-                  {t.registration.step2}
+                  {lang === 'bn' ? 'গুগল দিয়ে সাইন-ইন করুন' : 'Sign in with Google'}
                 </h3>
                 <p className="text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold">
-                  {t.registration.googleSignInPrompt}
+                  {lang === 'bn'
+                    ? 'নিবন্ধনের স্থিতি, পেমেন্ট নিশ্চিতকরণ ও ডিজিটাল টিম পাস পাওয়ার জন্য গুগল অ্যাকাউন্ট দিয়ে সাইন-ইন করুন।'
+                    : 'Sign in with your Google account to submit team registration and receive your digital matchday pass.'}
                 </p>
               </div>
 
               {user ? (
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 max-w-md mx-auto space-y-1.5 text-left">
-                  <p className="text-xs text-emerald-800 dark:text-emerald-300 font-bold">{t.registration.googleAccountConnected}</p>
-                  <p className="font-black text-[#08143A] dark:text-white">{user.displayName || 'Google User'}</p>
+                <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 max-w-md mx-auto space-y-1.5 text-left shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600" />
+                      <span>{t.registration.googleAccountConnected}</span>
+                    </p>
+                    <span className="text-[10px] font-mono bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-2 py-0.5 rounded font-bold">
+                      Active
+                    </span>
+                  </div>
+                  <p className="font-black text-[#08143A] dark:text-white text-base">{user.displayName || 'Google User'}</p>
                   <p className="text-xs text-[#273656] dark:text-[#CBD5E1] font-mono">{user.email}</p>
                 </div>
               ) : (
                 <div className="pt-2">
                   <button
                     onClick={signInWithGoogle}
-                    className="px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] shadow-md inline-flex items-center gap-2 uppercase tracking-wider text-sm"
+                    className="px-7 py-3.5 rounded-xl font-black text-slate-800 dark:text-white bg-white dark:bg-[#071333] hover:bg-slate-50 dark:hover:bg-[#0f2358] border-2 border-slate-300 dark:border-[#2a4d9c] shadow-md hover:shadow-lg inline-flex items-center gap-3 uppercase tracking-wider text-sm transition-all hover:scale-105 active:scale-95"
                   >
-                    <User className="w-5 h-5" />
-                    <span>{t.nav.signIn}</span>
+                    <GoogleIcon className="w-5 h-5" />
+                    <span>{lang === 'bn' ? 'গুগল দিয়ে সাইন-ইন করুন' : 'Sign in with Google'}</span>
                   </button>
                 </div>
               )}
@@ -521,7 +649,7 @@ export default function RegistrationPage() {
                   onClick={() => setStep(3)}
                   className="px-7 py-3 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 uppercase tracking-wider text-sm shadow-md"
                 >
-                  <span>{t.common.next}</span>
+                  <span>{lang === 'bn' ? 'পরবর্তী ধাপে যান' : 'Continue to Form'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1069,5 +1197,13 @@ export default function RegistrationPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function RegistrationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#050D24] flex items-center justify-center text-white">Loading...</div>}>
+      <RegistrationContent />
+    </Suspense>
   );
 }

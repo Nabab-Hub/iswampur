@@ -131,19 +131,14 @@ export default function VerifyPassPage() {
                   </div>
                 </div>
 
-                {/* Download PDF button */}
-                <div className="pt-2">
-                  <a
-                    href={`/api/passes/${passId}/download`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full py-3 rounded-xl font-bold bg-[#19398A] hover:bg-[#112766] border border-[#1d3575] text-white flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md transition-colors"
-                  >
-                    <Download className="w-4 h-4 text-[#F9A01B]" />
-                    <span>
-                      {lang === 'bn' ? 'অফিসিয়াল PDF পাস ডাউনলোড' : 'Download Official PDF Pass'}
-                    </span>
-                  </a>
+                {/* Official security badge */}
+                <div className="pt-2 text-xs text-slate-400 font-semibold flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>
+                    {lang === 'bn'
+                      ? 'অফিসিয়াল টিম পাসটি নিবন্ধিত দলনেতার সুরক্ষিত ইমেইল ও প্রোফাইলে সংরক্ষিত রয়েছে।'
+                      : 'The official pass is securely held in the registered team representative profile and email.'}
+                  </span>
                 </div>
               </>
             ) : (

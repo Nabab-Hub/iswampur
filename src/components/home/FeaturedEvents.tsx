@@ -89,8 +89,8 @@ function SocialPostCard({ post }: { post: PostAnnouncement }) {
                 <span>{post.eventName || (lang === 'bn' ? 'ঈশ্বমপুর উৎসব' : 'Iswampur Celebrations')}</span>
                 <CheckCircle className="w-3.5 h-3.5 text-[#00A3E0] fill-[#00A3E0] text-white inline-block ml-1.5 align-middle shrink-0" />
               </h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                {new Date(post.createdAt).toLocaleDateString(undefined, {
+              <p suppressHydrationWarning className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                {new Date(post.createdAt).toLocaleDateString('en-GB', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

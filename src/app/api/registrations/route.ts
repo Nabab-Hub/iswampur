@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     const eventId = searchParams.get('eventId') || undefined;
     const ownerEmail = searchParams.get('ownerEmail') || undefined;
     const ownerUid = searchParams.get('ownerUid') || undefined;
+    const isPublic = searchParams.get('public') === 'true';
 
     const list = await repository.getRegistrations({
       status,
@@ -17,6 +18,26 @@ export async function GET(req: NextRequest) {
       ownerEmail,
       ownerUid,
     });
+
+    if (isPublic) {
+      // Strip sensitive IDs, payment proof, pass credentials, and contact numbers from public display
+      const sanitized = list.map((reg) => ({
+        id: reg.id,
+        eventId: reg.eventId,
+        eventSlug: reg.eventSlug,
+        seasonId: reg.seasonId,
+        status: reg.status,
+        team: {
+          name: reg.team.name,
+          address: reg.team.address,
+          representativeName: reg.team.representativeName,
+          members: reg.team.members.map((m) => ({ name: m.name, role: m.role })),
+        },
+        createdAt: reg.createdAt,
+      }));
+      return NextResponse.json(sanitized);
+    }
+
     return NextResponse.json(list);
   } catch (error) {
     console.error('Failed to get registrations:', error);
@@ -82,18 +103,23 @@ export async function POST(req: NextRequest) {
     const regId = body.id || `reg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const status = body.status === 'DRAFT' ? 'DRAFT' : 'PENDING_REVIEW';
 
+    let existingReg: TeamRegistration | null = null;
+    if (body.id) {
+      existingReg = await repository.getRegistrationById(body.id);
+    }
+
     const newReg: TeamRegistration = {
       id: regId,
-      seasonId: body.seasonId || 'ipl-2026',
+      seasonId: body.seasonId || existingReg?.seasonId || 'ipl-2026',
       eventId: body.eventId,
-      eventSlug: body.eventSlug || 'iswampur-premier-league-2026',
-      ownerUid: body.ownerUid || 'anonymous',
-      ownerEmail: body.ownerEmail,
-      ownerDisplayName: body.ownerDisplayName,
+      eventSlug: body.eventSlug || existingReg?.eventSlug || 'iswampur-premier-league-2026',
+      ownerUid: body.ownerUid || existingReg?.ownerUid || 'anonymous',
+      ownerEmail: body.ownerEmail || existingReg?.ownerEmail,
+      ownerDisplayName: body.ownerDisplayName || existingReg?.ownerDisplayName,
       language: body.language || 'bn',
       termsAccepted: Boolean(body.termsAccepted),
-      termsAcceptedAt: body.termsAcceptedAt || new Date().toISOString(),
-      termsVersion: body.termsVersion || '2026.1',
+      termsAcceptedAt: body.termsAcceptedAt || existingReg?.termsAcceptedAt || new Date().toISOString(),
+      termsVersion: body.termsVersion || existingReg?.termsVersion || '2026.1',
       team: {
         name: body.team.name.trim(),
         address: body.team.address || '',
@@ -113,13 +139,20 @@ export async function POST(req: NextRequest) {
         submittedAt: new Date().toISOString(),
       },
       status,
-      createdAt: new Date().toISOString(),
+      createdAt: existingReg?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       history: [
+        ...(existingReg?.history || []),
         {
-          action: status === 'DRAFT' ? 'DRAFT_SAVED' : 'SUBMITTED',
+          action:
+            status === 'DRAFT'
+              ? 'DRAFT_SAVED'
+              : existingReg?.status === 'CORRECTION_REQUIRED'
+              ? 'RESUBMITTED_AFTER_CORRECTION'
+              : 'SUBMITTED',
           performedBy: body.ownerEmail,
           timestamp: new Date().toISOString(),
+          note: existingReg?.reviewNote ? `Previous Admin Note: ${existingReg.reviewNote}` : undefined,
         },
       ],
     };
@@ -132,13 +165,20 @@ export async function POST(req: NextRequest) {
         console.error('Registration confirmation email failed:', err)
       );
 
-      // 2. Dispatch reviewer email to admins assigned in site settings
+      // 2. Dispatch reviewer email to skahidulla568@gmail.com and reviewer admins assigned in site settings
       const settings = await repository.getSettings();
-      if (settings.reviewerAdmins && settings.reviewerAdmins.length > 0) {
-        sendReviewerAlertEmail(saved, settings.reviewerAdmins, siteUrl).catch((err) =>
-          console.error('Reviewer alert email failed:', err)
-        );
-      }
+      const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com';
+      const adminRecipients = Array.from(
+        new Set([
+          superAdminEmail,
+          'skahidulla568@gmail.com',
+          ...(settings.reviewerAdmins || []),
+        ].filter(Boolean))
+      ) as string[];
+
+      sendReviewerAlertEmail(saved, adminRecipients, siteUrl).catch((err) =>
+        console.error('Reviewer alert email failed:', err)
+      );
     }
 
     await repository.logAction({

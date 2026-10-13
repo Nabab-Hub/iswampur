@@ -516,11 +516,11 @@ export default function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/form-builder"
+              href="/admin/events"
               className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-[#071333] dark:hover:bg-[#0d1f4d] text-slate-800 dark:text-slate-100 flex items-center gap-2 border border-slate-200 dark:border-[#1d3575] dark:hover:border-[#F26522]/60 transition-all hover:scale-[1.02] shadow-xs"
             >
-              <Layers className="w-4 h-4 text-[#F26522]" />
-              <span>{lang === 'bn' ? 'ফর্ম বিল্ডার' : 'Form Builder'}</span>
+              <Calendar className="w-4 h-4 text-[#F26522]" />
+              <span>{lang === 'bn' ? 'অনুষ্ঠান ও ফর্ম' : 'Events & Forms'}</span>
             </Link>
           </div>
         </div>

@@ -210,12 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: QrCode,
       show: hasPermission('matchday.checkin'),
     },
-    {
-      href: '/admin/form-builder',
-      label: lang === 'bn' ? 'ফর্ম বিল্ডার (Dynamic)' : 'Registration Form Builder',
-      icon: Sliders,
-      show: hasPermission('ipl.manage') || isSuperAdmin,
-    },
+
     {
       href: '/admin/content',
       label: lang === 'bn' ? 'সাইট কন্টেন্ট ও পেমেন্ট' : 'Site Content & Payment QR',

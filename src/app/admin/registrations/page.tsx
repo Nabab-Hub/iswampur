@@ -131,6 +131,51 @@ function RegistrationsReviewContent() {
     return registrations.filter((r) => r.eventId === eventId).length;
   };
 
+  // 1-Click Approve & Issue Pass (Predefined approval note, dispatches email & pass automatically)
+  const handleApproveDirectly = async () => {
+    if (!selectedReg || processing) return;
+
+    setProcessing(true);
+    setActionSuccessMsg('');
+
+    const defaultApprovalNote =
+      lang === 'bn'
+        ? 'পেমেন্ট ও খেলোয়াড় তালিকা যাচাইপূর্বক স্কোয়াড সফলভাবে অনুমোদন করা হয়েছে। অফিসিয়াল ডিজিটাল ম্যাচডে টিম পাস ইস্যু করা হলো।'
+        : 'Payment verified and squad roster accepted. Official digital matchday team pass issued.';
+
+    try {
+      const res = await fetch(`/api/registrations/${selectedReg.id}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'APPROVE',
+          reason: defaultApprovalNote,
+          actorEmail: user?.email,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || (lang === 'bn' ? 'অনুমোদন ব্যর্থ হয়েছে' : 'Approval failed'));
+
+      const successMsg =
+        lang === 'bn'
+          ? `✓ "${selectedReg.team.name}" দল অনুমোদিত হয়েছে এবং অফিসিয়াল টিম পাস (${resData.humanPassCode}) ইমেইলে পাঠিয়ে দেওয়া হয়েছে!`
+          : `✓ Squad "${selectedReg.team.name}" approved! Digital Team Pass (${resData.humanPassCode}) issued and emailed.`;
+
+      setActionSuccessMsg(successMsg);
+      toast.success(successMsg);
+
+      await loadRegistrations();
+      setSelectedReg(null);
+      setReviewAction(null);
+      setReviewReason('');
+    } catch (err: any) {
+      toast.error(err.message || 'Error occurred');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleReviewSubmit = async () => {
     if (!selectedReg || !reviewAction) return;
 
@@ -725,29 +770,48 @@ function RegistrationsReviewContent() {
             {/* Review Actions */}
             {hasPermission('registrations.review') && (
               <div className="pt-4 border-t border-[#cbd9ec] dark:border-[#1d3575] space-y-4">
-                <p className="text-xs font-black uppercase text-[#64748B] dark:text-[#94A3B8]">
-                  {lang === 'bn' ? 'পর্যালোচনা সিদ্ধান্ত গ্রহণ করুন:' : 'Take Review Decision:'}
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <p className="text-xs font-black uppercase text-[#64748B] dark:text-[#94A3B8]">
+                    {lang === 'bn' ? 'পর্যালোচনা সিদ্ধান্ত গ্রহণ করুন:' : 'Take Review Decision:'}
+                  </p>
+                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {lang === 'bn' ? '১-ক্লিকে স্বয়ংক্রিয় পাস তৈরি ও ইমেইল প্রেরণ' : '1-Click instant pass & email dispatch'}
+                  </span>
+                </div>
 
                 <div className="flex flex-wrap gap-3">
+                  {/* 1-Click Instant Approve & Issue Pass (No extra input required, dispatches pass & email immediately) */}
                   <button
-                    onClick={() => setReviewAction('APPROVE')}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all ${
-                      reviewAction === 'APPROVE'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                    }`}
+                    type="button"
+                    disabled={processing}
+                    onClick={handleApproveDirectly}
+                    className="px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all bg-emerald-600 hover:bg-emerald-500 text-white shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{lang === 'bn' ? 'অনুমোদন করুন (Approve & Pass)' : 'Approve & Issue Pass'}</span>
+                    {processing && !reviewAction ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === 'bn' ? 'পাস ইস্যু ও ইমেইল পাঠানো হচ্ছে...' : 'Issuing Pass & Sending Email...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{lang === 'bn' ? 'অনুমোদন ও পাস ইস্যু (১-ক্লিকে মেইল পাঠান)' : 'Approve & Issue Pass'}</span>
+                      </>
+                    )}
                   </button>
 
                   <button
-                    onClick={() => setReviewAction('CORRECTION_REQUIRED')}
+                    type="button"
+                    disabled={processing}
+                    onClick={() => {
+                      setReviewAction('CORRECTION_REQUIRED');
+                      setReviewReason('');
+                    }}
                     className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all ${
                       reviewAction === 'CORRECTION_REQUIRED'
                         ? 'bg-[#F26522] text-white shadow-md'
-                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900'
                     }`}
                   >
                     <AlertCircle className="w-4 h-4" />
@@ -755,11 +819,16 @@ function RegistrationsReviewContent() {
                   </button>
 
                   <button
-                    onClick={() => setReviewAction('REJECT')}
+                    type="button"
+                    disabled={processing}
+                    onClick={() => {
+                      setReviewAction('REJECT');
+                      setReviewReason('');
+                    }}
                     className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all ${
                       reviewAction === 'REJECT'
                         ? 'bg-rose-600 text-white shadow-md'
-                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900'
                     }`}
                   >
                     <XCircle className="w-4 h-4" />
@@ -767,27 +836,29 @@ function RegistrationsReviewContent() {
                   </button>
                 </div>
 
+                {/* Reason Input only shown for Correction or Rejection */}
                 {reviewAction && (
                   <div className="p-4 rounded-2xl bg-[#f0f4fa] dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] space-y-3 animate-in fade-in">
                     <label className="block text-xs font-black text-[#08143A] dark:text-white">
-                      {reviewAction === 'APPROVE'
-                        ? (lang === 'bn' ? 'অভিনন্দন বার্তা / নোট (ঐচ্ছিক):' : 'Approval Note (Optional):')
-                        : (lang === 'bn' ? 'কারণ বা নোট (ইমেইলে পাঠানো হবে) *:' : 'Reason / Note (Emailed to Team) *:')}
+                      {reviewAction === 'CORRECTION_REQUIRED'
+                        ? (lang === 'bn' ? 'কী সংশোধন করতে হবে তা লিখুন (ইমেইলে পাঠানো হবে) *:' : 'Specify what needs correction (Emailed to Team) *:')
+                        : (lang === 'bn' ? 'বাতিলের কারণ লিখুন (ইমেইলে পাঠানো হবে) *:' : 'Reason for rejection (Emailed to Team) *:')}
                     </label>
                     <textarea
                       rows={2}
                       value={reviewReason}
                       onChange={(e) => setReviewReason(e.target.value)}
                       placeholder={
-                        reviewAction === 'APPROVE'
-                          ? (lang === 'bn' ? 'পেমেন্ট ও দল সঠিক রয়েছে।' : 'Payment verified and squad accepted.')
-                          : (lang === 'bn' ? 'উদাঃ প্রেরিত স্ক্রিনশটে ট্রানজ্যাকশন আইডি অস্পষ্ট। পুনরায় আপলোড করুন।' : 'e.g. Screenshot UTR is unreadable. Please re-upload.')
+                        reviewAction === 'CORRECTION_REQUIRED'
+                          ? (lang === 'bn' ? 'উদাঃ প্রেরিত স্ক্রিনশটে ট্রানজ্যাকশন আইডি অস্পষ্ট। পুনরায় সঠিক স্ক্রিনশট আপলোড করুন।' : 'e.g. Screenshot UTR is unreadable. Please re-upload with clear UTR.')
+                          : (lang === 'bn' ? 'উদাঃ ভুয়া বা ত্রুটিযুক্ত পেমেন্ট রসিদ প্রদান করা হয়েছে।' : 'e.g. Invalid payment verification details.')
                       }
                       className="w-full p-2.5 rounded-xl border border-[#cbd9ec] dark:border-[#1d3575] bg-white dark:bg-[#0c1a40] text-[#08143A] dark:text-white font-semibold text-xs focus:border-[#F26522]"
                     />
 
                     <div className="flex justify-end gap-2">
                       <button
+                        type="button"
                         onClick={() => {
                           setReviewAction(null);
                           setReviewReason('');
@@ -797,6 +868,7 @@ function RegistrationsReviewContent() {
                         {lang === 'bn' ? 'বাতিল' : 'Cancel'}
                       </button>
                       <button
+                        type="button"
                         disabled={processing}
                         onClick={handleReviewSubmit}
                         className="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 disabled:opacity-60 text-white shadow-md uppercase tracking-wider flex items-center gap-1.5"
@@ -807,7 +879,7 @@ function RegistrationsReviewContent() {
                             <span>{lang === 'bn' ? 'প্রক্রিয়াধীন...' : 'Processing...'}</span>
                           </>
                         ) : (
-                          <span>{lang === 'bn' ? 'সিদ্ধান্ত চূড়ান্ত করুন' : 'Confirm Decision'}</span>
+                          <span>{lang === 'bn' ? 'সিদ্ধান্ত পাঠান' : 'Submit & Send Email'}</span>
                         )}
                       </button>
                     </div>

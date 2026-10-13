@@ -267,6 +267,54 @@ function MyRegistrationContent() {
                     </div>
                   )}
 
+                  {/* Correction Required Banner with Action Link */}
+                  {selectedReg.status === 'CORRECTION_REQUIRED' && (
+                    <div className="p-5 sm:p-6 rounded-3xl bg-amber-500/10 border-2 border-[#F9A01B] space-y-3">
+                      <div className="flex items-center gap-2 text-[#F9A01B] font-black">
+                        <AlertCircle className="w-5 h-5 shrink-0" />
+                        <h4 className="text-sm uppercase tracking-wider">
+                          {lang === 'bn' ? 'অ্যাডমিন সংশোধন নির্দেশিকা (Correction Required)' : 'Admin Correction Required'}
+                        </h4>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#071333] border border-amber-300 dark:border-amber-700/60 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mb-1">
+                          {lang === 'bn' ? 'কী সংশোধন করতে হবে:' : 'Action Required / Admin Note:'}
+                        </p>
+                        <p className="font-bold text-slate-900 dark:text-white leading-relaxed">
+                          {selectedReg.reviewNote || (lang === 'bn' ? 'প্রদত্ত তথ্য অথবা পেমেন্ট রসিদ অসম্পূর্ণ।' : 'Missing or incomplete details.')}
+                        </p>
+                      </div>
+                      <div className="pt-2">
+                        <a
+                          href={`/register/${selectedReg.eventSlug || selectedReg.eventId || 'iswampur-premier-league-2026'}?edit=${selectedReg.id}`}
+                          className="px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 text-white shadow-md inline-flex items-center gap-2 uppercase tracking-wider"
+                        >
+                          <span>{lang === 'bn' ? 'তথ্য সংশোধন করে পুনরায় জমা দিন →' : 'Edit & Resubmit Registration →'}</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rejection Banner */}
+                  {selectedReg.status === 'REJECTED' && (
+                    <div className="p-5 sm:p-6 rounded-3xl bg-rose-500/10 border-2 border-rose-500/60 space-y-3">
+                      <div className="flex items-center gap-2 text-rose-500 font-black">
+                        <AlertCircle className="w-5 h-5 shrink-0" />
+                        <h4 className="text-sm uppercase tracking-wider">
+                          {lang === 'bn' ? 'আবেদন বাতিল করা হয়েছে (Registration Rejected)' : 'Registration Application Rejected'}
+                        </h4>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#071333] border border-rose-300 dark:border-rose-900 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mb-1">
+                          {lang === 'bn' ? 'বাতিল করার কারণ:' : 'Reason for Rejection:'}
+                        </p>
+                        <p className="font-bold text-slate-900 dark:text-white leading-relaxed">
+                          {selectedReg.reviewNote || (lang === 'bn' ? 'নিয়মাবলি বা শর্ত পূরণ না করায় বাতিল করা হয়েছে।' : 'Conditions or verification criteria not met.')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Team & Members */}
                   <div className="space-y-4">
                     <h4 className="font-black text-base text-[#08143A] dark:text-white border-b pb-2 border-[#cbd9ec] dark:border-[#1d3575]">

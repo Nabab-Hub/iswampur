@@ -16,7 +16,7 @@ export default function ApprovedTeamsPage() {
   useEffect(() => {
     async function fetchTeams() {
       try {
-        const res = await fetch('/api/registrations?status=APPROVED');
+        const res = await fetch('/api/registrations?status=APPROVED&public=true');
         if (res.ok) {
           const data = await res.json();
           setRegistrations(data);
@@ -53,8 +53,8 @@ export default function ApprovedTeamsPage() {
             </h1>
             <p className="text-xs sm:text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold">
               {lang === 'bn'
-                ? `যাচাইকৃত এবং ডিজিটাল টিম পাস প্রাপ্ত মোট দল: ${registrations.length} টি`
-                : `Verified squads issued digital match passes: ${registrations.length}`}
+                ? `টুর্নামেন্টে অংশগ্রহণের জন্য চূড়ান্ত অনুমোদিত মোট দল: ${registrations.length} টি`
+                : `Total officially approved tournament squads: ${registrations.length}`}
             </p>
           </div>
 
@@ -81,10 +81,11 @@ export default function ApprovedTeamsPage() {
                   <div className="flex items-center justify-between">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
                       <CheckCircle2 className="w-3 h-3 text-white" />
-                      <span>{lang === 'bn' ? 'অনুমোদিত' : 'APPROVED'}</span>
+                      <span>{lang === 'bn' ? 'অনুমোদিত দল' : 'VERIFIED SQUAD'}</span>
                     </span>
-                    <span className="text-xs font-black text-[#F26522] dark:text-[#F9A01B]">
-                      {reg.humanPassCode}
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <Trophy className="w-3.5 h-3.5 text-[#F9A01B]" />
+                      <span>{lang === 'bn' ? 'অফিসিয়াল দল' : 'Official Squad'}</span>
                     </span>
                   </div>
 
@@ -105,7 +106,7 @@ export default function ApprovedTeamsPage() {
                       {reg.team.representativeName}
                     </p>
                     <p className="text-[#64748B] dark:text-[#94A3B8] pt-1 font-semibold">
-                      {lang === 'bn' ? 'নিবন্ধিত খেলোয়াড়:' : 'Squad Size:'}
+                      {lang === 'bn' ? 'নিবন্ধিত খেলোয়াড় সংখ্যা:' : 'Squad Size:'}
                     </p>
                     <p className="font-black text-[#19398A] dark:text-[#00A3E0]">
                       {reg.team.members.length} {lang === 'bn' ? 'জন খেলোয়াড়' : 'Players'}
@@ -118,33 +119,29 @@ export default function ApprovedTeamsPage() {
                       {lang === 'bn' ? 'খেলোয়াড় তালিকা:' : 'SQUAD ROSTER:'}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
-                      {reg.team.members.slice(0, 5).map((m, idx) => (
+                      {reg.team.members.map((m, idx) => (
                         <span
                           key={idx}
                           className="px-2 py-0.5 rounded bg-[#e6eef8] dark:bg-[#112766] text-[11px] font-bold text-[#08143A] dark:text-white"
                         >
                           {m.name}
+                          {m.role === 'captain' ? (
+                            <span className="ml-1 text-[9px] text-[#F26522] font-black">(C)</span>
+                          ) : m.role === 'vice_captain' ? (
+                            <span className="ml-1 text-[9px] text-[#00A3E0] font-black">(VC)</span>
+                          ) : null}
                         </span>
                       ))}
-                      {reg.team.members.length > 5 && (
-                        <span className="px-2 py-0.5 rounded bg-[#e6eef8] dark:bg-[#112766] text-[11px] text-[#F26522] dark:text-[#F9A01B] font-black">
-                          +{reg.team.members.length - 5} {lang === 'bn' ? 'জন' : 'more'}
-                        </span>
-                      )}
                     </div>
                   </div>
 
-                  {reg.passId && (
-                    <div className="pt-2 border-t border-[#cbd9ec] dark:border-[#1d3575]">
-                      <Link
-                        href={`/verify/${reg.passId}`}
-                        className="text-xs font-black text-[#19398A] dark:text-[#00A3E0] hover:text-[#F26522] dark:hover:text-[#F9A01B] flex items-center gap-1.5"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>{lang === 'bn' ? 'ডিজিটাল পাস যাচাই করুন' : 'Verify Digital Pass'}</span>
-                      </Link>
-                    </div>
-                  )}
+                  <div className="pt-2 border-t border-[#cbd9ec] dark:border-[#1d3575] flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#94A3B8] font-semibold">
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{lang === 'bn' ? 'কমিটি দ্বারা যাচাইকৃত' : 'Committee Verified'}</span>
+                    </span>
+                    <span>{lang === 'bn' ? 'আইপিএল ২০২৬' : 'IPL 2026'}</span>
+                  </div>
                 </div>
               ))}
             </div>
