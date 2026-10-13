@@ -69,9 +69,6 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#071333]/95 backdrop-blur-md border-b border-[#cbd9ec] dark:border-[#1d3575] transition-colors shadow-sm">
-        {/* Top IPL Broadcast Accent Bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#F26522] via-[#F9A01B] to-[#00A3E0]" />
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
             {/* Logo & Village / IPL Title */}
