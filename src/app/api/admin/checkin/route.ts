@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { repository } from '@/lib/db/repository';
 import { verifyPassSignature } from '@/lib/pass/generator';
+import { extractPassIdOrCode } from '@/lib/pass/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +10,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pass code or ID required' }, { status: 400 });
     }
 
-    const pass = await repository.getPass(passCode);
+    const cleanPassCode = extractPassIdOrCode(passCode);
+    const pass = await repository.getPass(cleanPassCode || passCode);
     if (!pass) {
       return NextResponse.json(
         { success: false, error: 'কোনো বৈধ পাস পাওয়া যায়নি (Pass not found)' },
@@ -33,12 +35,17 @@ export async function POST(req: NextRequest) {
     }
 
     if (pass.status === 'CHECKED_IN') {
+      const checkinTimeFormatted = pass.checkedInAt
+        ? new Date(pass.checkedInAt).toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          })
+        : '';
       return NextResponse.json({
         success: true,
         alreadyCheckedIn: true,
-        message: `এই দল ইতিপূর্বেই মাঠে উপস্থিত হিসেবে নথিভুক্ত হয়েছে (${new Date(
-          pass.checkedInAt || ''
-        ).toLocaleTimeString()})`,
+        message: `এই দল ইতিপূর্বেই মাঠে উপস্থিত হিসেবে নথিভুক্ত রয়েছে${checkinTimeFormatted ? ` (${checkinTimeFormatted})` : ''}`,
         pass,
       });
     }

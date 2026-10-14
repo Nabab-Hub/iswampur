@@ -42,6 +42,30 @@
   h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
   }
+
+  /* Universal Pointer Cursor for ALL interactive and clickable elements */
+  button,
+  [role="button"],
+  a,
+  select,
+  summary,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"]::file-selector-button,
+  label[for],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  input:disabled,
+  select:disabled {
+    cursor: not-allowed !important;
+  }
 }
 
 /* IPL Broadcast-Grade Glassmorphism Cards */
@@ -238,6 +262,44 @@ body::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ff7a38 0%, #ffb642 100%);
   box-shadow: 0 0 14px rgba(242, 101, 34, 0.7);
+}
+
+/* ==========================================================================
+   GLOBAL INTERACTIVE CURSOR POINTER (ADMIN, SUPER ADMIN & ENTIRE WEBSITE)
+   ========================================================================== */
+html body button,
+html body [role="button"],
+html body a,
+html body a *,
+html body button *,
+html body [role="button"] *,
+html body select,
+html body select *,
+html body summary,
+html body input[type="button"],
+html body input[type="submit"],
+html body input[type="reset"],
+html body input[type="checkbox"],
+html body input[type="radio"],
+html body input[type="file"]::file-selector-button,
+html body label[for],
+html body label:has(input),
+html body .cursor-pointer,
+html body .cursor-pointer *,
+html body [onclick],
+html body [onclick] * {
+  cursor: pointer !important;
+}
+
+html body button:disabled,
+html body button:disabled *,
+html body [role="button"][aria-disabled="true"],
+html body [role="button"][aria-disabled="true"] *,
+html body input:disabled,
+html body select:disabled,
+html body .cursor-not-allowed,
+html body .cursor-not-allowed * {
+  cursor: not-allowed !important;
 }
 
 

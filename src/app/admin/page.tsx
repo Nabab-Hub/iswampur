@@ -57,8 +57,13 @@ export default function AdminDashboardPage() {
         setRegistrations(regData);
       }
       if (evRes.ok) {
-        const evData = await evRes.json();
+        const evData: VillageEvent[] = await evRes.json();
         setEvents(evData);
+        // By default, select an active event
+        const firstActive = evData.find((e) => e.registrationEnabled);
+        if (firstActive) {
+          setSelectedEventId((prev) => (prev === 'ALL' ? firstActive.id : prev));
+        }
       }
     } catch (err) {
       console.error('Failed to load admin metrics:', err);
@@ -756,7 +761,7 @@ export default function AdminDashboardPage() {
                         <td className="p-3.5 font-mono font-bold text-[#08143A] dark:text-white">
                           {reg.team.phone}
                         </td>
-                        <td className="p-3.5 text-slate-500 font-mono text-[11px]">
+                        <td className="p-3.5 text-slate-500 font-mono text-[11px]" suppressHydrationWarning>
                           {reg.createdAt ? new Date(reg.createdAt).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="p-3.5">

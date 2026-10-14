@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useAuth } from '@/lib/auth/authContext';
 import { useLanguage } from '@/lib/i18n/context';
-import { TeamPass } from '@/types';
+import { TeamPass, VillageEvent } from '@/types';
 import {
   QrCode,
   CheckCircle2,
@@ -20,8 +20,13 @@ import {
   XCircle,
   Sparkles,
   Loader2,
+  Calendar,
+  ChevronDown,
+  Check,
+  X,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { extractPassIdOrCode } from '@/lib/pass/utils';
 
 export default function MatchdayCheckinPage() {
   const { user } = useAuth();
@@ -43,31 +48,94 @@ export default function MatchdayCheckinPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingList, setPendingList] = useState<TeamPass[]>([]);
   const [enteredList, setEnteredList] = useState<TeamPass[]>([]);
+  const [highlightedPassId, setHighlightedPassId] = useState<string | null>(null);
   const [loadingLists, setLoadingLists] = useState(true);
+
+  // Event Selection & Filter State
+  const [events, setEvents] = useState<VillageEvent[]>([]);
+  const [eventFilter, setEventFilter] = useState<string>('ALL');
+  const [eventDropdownOpen, setEventDropdownOpen] = useState(false);
+  const [eventSearchQuery, setEventSearchQuery] = useState('');
+  const eventDropdownRef = useRef<HTMLDivElement>(null);
 
   const scannerRef = useRef<any>(null);
   const qrRegionId = 'qr-reader-container';
 
-  // Fetch pending and entered passes
-  const fetchPasses = async () => {
+  // Fetch pending and entered passes along with events
+  const fetchData = async () => {
     setLoadingLists(true);
     try {
-      const res = await fetch('/api/admin/checkin');
+      const [res, evRes] = await Promise.all([
+        fetch('/api/admin/checkin'),
+        fetch('/api/events'),
+      ]);
       if (res.ok) {
         const data = await res.json();
         setPendingList(data.pending || []);
         setEnteredList(data.entered || []);
       }
+      if (evRes.ok) {
+        const evData: VillageEvent[] = await evRes.json();
+        setEvents(evData);
+        // By default, select the first active event if currently ALL
+        const firstActive = evData.find((e) => e.registrationEnabled);
+        if (firstActive) {
+          setEventFilter((prev) => (prev === 'ALL' ? firstActive.id : prev));
+        }
+      }
     } catch (err) {
-      console.error('Failed to fetch passes:', err);
+      console.error('Failed to fetch checkin data:', err);
     } finally {
       setLoadingLists(false);
     }
   };
 
   useEffect(() => {
-    fetchPasses();
+    fetchData();
   }, []);
+
+  // Click outside to close custom event dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (eventDropdownRef.current && !eventDropdownRef.current.contains(event.target as Node)) {
+        setEventDropdownOpen(false);
+      }
+    }
+    if (eventDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [eventDropdownOpen]);
+
+  // Sort and filter events: ONLY active events (registrationEnabled: true) are shown for check-in
+  const { activeEvents, selectedEventObj } = useMemo(() => {
+    const q = eventSearchQuery.toLowerCase().trim();
+
+    const matchesSearch = (ev: VillageEvent) => {
+      if (!q) return true;
+      const titleBn = ev.title?.bn?.toLowerCase() || '';
+      const titleEn = ev.title?.en?.toLowerCase() || '';
+      const venueBn = ev.venue?.bn?.toLowerCase() || '';
+      const venueEn = ev.venue?.en?.toLowerCase() || '';
+      return titleBn.includes(q) || titleEn.includes(q) || venueBn.includes(q) || venueEn.includes(q);
+    };
+
+    const active = events.filter((e) => e.registrationEnabled && matchesSearch(e));
+    const selected = events.find((e) => e.id === eventFilter);
+
+    return {
+      activeEvents: active,
+      selectedEventObj: selected,
+    };
+  }, [events, eventFilter, eventSearchQuery]);
+
+  const getEventPassCount = (eventId: string) => {
+    const pCount = pendingList.filter((p) => p.eventId === eventId).length;
+    const eCount = enteredList.filter((p) => p.eventId === eventId).length;
+    return { pending: pCount, entered: eCount, total: pCount + eCount };
+  };
 
   // Initialize and manage camera QR scanner
   const startCameraScanner = async () => {
@@ -144,16 +212,9 @@ export default function MatchdayCheckinPage() {
       await stopCameraScanner();
     }
 
-    let extractedCode = rawCode.trim();
-    // In case the QR code contains JSON payload
-    try {
-      const parsed = JSON.parse(extractedCode);
-      if (parsed.humanPassCode) extractedCode = parsed.humanPassCode;
-      else if (parsed.passId) extractedCode = parsed.passId;
-    } catch {}
-
-    setPassInput(extractedCode);
-    executeCheckin(extractedCode);
+    const cleanCode = extractPassIdOrCode(rawCode);
+    setPassInput(cleanCode);
+    executeCheckin(cleanCode);
   };
 
   // Scan from file upload
@@ -185,7 +246,9 @@ export default function MatchdayCheckinPage() {
   };
 
   const executeCheckin = async (code: string) => {
-    if (!code) return;
+    const cleanCode = extractPassIdOrCode(code);
+    if (!cleanCode) return;
+    setPassInput(cleanCode);
     setChecking(true);
     setResult(null);
 
@@ -194,7 +257,7 @@ export default function MatchdayCheckinPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          passCode: code,
+          passCode: cleanCode,
           actorEmail: user?.email,
         }),
       });
@@ -204,9 +267,32 @@ export default function MatchdayCheckinPage() {
       if (res.ok && data.success) {
         setResult(data);
         if (!data.alreadyCheckedIn && data.pass) {
-          // Move from pending to entered list immediately
+          // Move from pending to entered list immediately at the top
           setPendingList((prev) => prev.filter((p) => p.passId !== data.pass.passId && p.humanPassCode !== data.pass.humanPassCode));
-          setEnteredList((prev) => [data.pass, ...prev]);
+          setEnteredList((prev) => [data.pass, ...prev.filter((p) => p.passId !== data.pass.passId && p.humanPassCode !== data.pass.humanPassCode)]);
+          setActiveTab('entered');
+          setSearchQuery('');
+          setHighlightedPassId(data.pass.passId);
+          toast.success(
+            lang === 'bn'
+              ? `✓ সফলভাবে চেক-ইন সম্পন্ন! দলের নাম: ${data.pass.teamName}`
+              : `✓ Check-in confirmed! Team: ${data.pass.teamName}`
+          );
+        } else if (data.alreadyCheckedIn && data.pass) {
+          // Squad is already checked in: switch to entered tab, keep all teams visible, and highlight this team at the TOP
+          setActiveTab('entered');
+          setSearchQuery('');
+          setHighlightedPassId(data.pass.passId);
+          // Ensure this team is moved to the top of enteredList
+          setEnteredList((prev) => {
+            const others = prev.filter((p) => p.passId !== data.pass.passId && p.humanPassCode !== data.pass.humanPassCode);
+            return [data.pass, ...others];
+          });
+          toast.warning(
+            lang === 'bn'
+              ? `⚠️ "${data.pass.teamName}" দল ইতিমধ্যে তালিকায় উপস্থিত (Already in the List)!`
+              : `⚠️ Squad "${data.pass.teamName}" is already in the entered list!`
+          );
         }
       } else {
         setResult({
@@ -214,6 +300,7 @@ export default function MatchdayCheckinPage() {
           alreadyCheckedIn: false,
           message: data.error || (lang === 'bn' ? 'অবৈধ পাস বা ভুল কিউআর কোড।' : 'Invalid pass or unrecognized QR code.'),
         });
+        toast.error(data.error || (lang === 'bn' ? 'কোনো বৈধ পাস পাওয়া যায়নি।' : 'Pass not found or invalid.'));
       }
     } catch {
       setResult({
@@ -228,32 +315,72 @@ export default function MatchdayCheckinPage() {
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!passInput.trim()) return;
-    executeCheckin(passInput.trim());
+    const cleanCode = extractPassIdOrCode(passInput.trim());
+    setPassInput(cleanCode);
+    executeCheckin(cleanCode);
   };
 
+  const activeEventIds = useMemo(() => {
+    return new Set(events.filter((e) => e.registrationEnabled).map((e) => e.id));
+  }, [events]);
+
+  const allActivePassCount = useMemo(() => {
+    const p = pendingList.filter((x) => activeEventIds.has(x.eventId)).length;
+    const e = enteredList.filter((x) => activeEventIds.has(x.eventId)).length;
+    return { pending: p, entered: e, total: p + e };
+  }, [pendingList, enteredList, activeEventIds]);
+
+  const currentEventStats = useMemo(() => {
+    if (eventFilter === 'ALL') return allActivePassCount;
+    const p = pendingList.filter((x) => x.eventId === eventFilter).length;
+    const e = enteredList.filter((x) => x.eventId === eventFilter).length;
+    return { pending: p, entered: e, total: p + e };
+  }, [eventFilter, allActivePassCount, pendingList, enteredList]);
+
   const filteredPending = pendingList.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
+    const matchesEvent =
+      eventFilter === 'ALL'
+        ? (activeEventIds.size > 0 ? activeEventIds.has(p.eventId) : true)
+        : p.eventId === eventFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
       p.teamName.toLowerCase().includes(q) ||
       p.humanPassCode.toLowerCase().includes(q) ||
-      p.representativeName.toLowerCase().includes(q)
-    );
+      p.representativeName.toLowerCase().includes(q);
+    return matchesEvent && matchesSearch;
   });
 
-  const filteredEntered = enteredList.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      p.teamName.toLowerCase().includes(q) ||
-      p.humanPassCode.toLowerCase().includes(q) ||
-      p.representativeName.toLowerCase().includes(q)
-    );
-  });
+  const filteredEntered = useMemo(() => {
+    const list = enteredList.filter((p) => {
+      const matchesEvent =
+        eventFilter === 'ALL'
+          ? (activeEventIds.size > 0 ? activeEventIds.has(p.eventId) : true)
+          : p.eventId === eventFilter;
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        p.teamName.toLowerCase().includes(q) ||
+        p.humanPassCode.toLowerCase().includes(q) ||
+        p.representativeName.toLowerCase().includes(q);
+      return matchesEvent && matchesSearch;
+    });
+
+    if (highlightedPassId) {
+      return [...list].sort((a, b) => {
+        if (a.passId === highlightedPassId) return -1;
+        if (b.passId === highlightedPassId) return 1;
+        return 0;
+      });
+    }
+    return list;
+  }, [enteredList, eventFilter, activeEventIds, searchQuery, highlightedPassId]);
 
   return (
     <AdminLayout>
       <div id="file-qr-temp" className="hidden" />
 
-      <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+      <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6 border-slate-200 dark:border-[#1d3575]">
           <div>
@@ -272,12 +399,173 @@ export default function MatchdayCheckinPage() {
           </div>
 
           <button
-            onClick={fetchPasses}
+            onClick={fetchData}
             className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#071333] hover:bg-slate-200 dark:hover:bg-[#11245a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1d3575] transition-all hover:scale-105"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingLists ? 'animate-spin' : ''}`} />
             <span>{lang === 'bn' ? 'তালিকা রিফ্রেশ' : 'Refresh Lists'}</span>
           </button>
+        </div>
+
+        {/* Event Selection & Active Filter Bar */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#071333] border border-slate-200 dark:border-[#1d3575] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-500 dark:text-slate-400 shrink-0">
+              <Calendar className="w-4 h-4 text-[#F26522]" />
+              <span>{lang === 'bn' ? 'চেক-ইন ইভেন্ট নির্বাচন:' : 'Select Check-in Event:'}</span>
+            </div>
+
+            {/* Custom Searchable Event Combobox with Active Events on Top & Active Badges */}
+            <div className="relative w-full sm:w-auto" ref={eventDropdownRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setEventDropdownOpen(!eventDropdownOpen);
+                  if (!eventDropdownOpen) setEventSearchQuery('');
+                }}
+                className="w-full sm:w-auto min-w-[240px] max-w-full sm:max-w-[360px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#1d3575] bg-slate-50 dark:bg-[#0c1a40] text-slate-900 dark:text-white font-bold text-xs flex items-center justify-between gap-2 hover:border-[#F26522] dark:hover:border-cyan-400/50 transition-all shadow-xs text-left"
+              >
+                <div className="flex items-center gap-2 min-w-0 truncate">
+                  <span className="truncate">
+                    {selectedEventObj
+                      ? (lang === 'bn' ? selectedEventObj.title.bn : selectedEventObj.title.en)
+                      : (lang === 'bn' ? 'সকল অ্যাক্টিভ ইভেন্ট' : 'All Active Events')}
+                  </span>
+                  {selectedEventObj?.registrationEnabled && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Active
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {eventFilter !== 'ALL' && activeEvents.length > 1 && (
+                    <span
+                      role="button"
+                      title={lang === 'bn' ? 'ফিল্টার মুছুন' : 'Clear filter'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEventFilter('ALL');
+                      }}
+                      className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                      eventDropdownOpen ? 'rotate-180 text-[#F26522]' : ''
+                    }`}
+                  />
+                </div>
+              </button>
+
+              {/* Dropdown Menu */}
+              {eventDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-full sm:w-[360px] rounded-2xl bg-white dark:bg-[#0a1844] border border-slate-200 dark:border-[#1d3575] shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  {/* Search inside event dropdown */}
+                  <div className="p-2 border-b border-slate-100 dark:border-[#142654]">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder={lang === 'bn' ? 'অ্যাক্টিভ ইভেন্টের নাম বা মাঠ খুঁজুন...' : 'Search active event name or venue...'}
+                        value={eventSearchQuery}
+                        onChange={(e) => setEventSearchQuery(e.target.value)}
+                        autoFocus
+                        className="w-full pl-8 pr-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#1d3575] bg-slate-50 dark:bg-[#071333] text-slate-900 dark:text-white font-medium text-xs focus:border-[#F26522]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-[#142654]/60 text-xs">
+                    {/* All Active Events option (shown when there are multiple active events) */}
+                    {activeEvents.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEventFilter('ALL');
+                          setEventDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-colors ${
+                          eventFilter === 'ALL'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold'
+                            : 'hover:bg-slate-50 dark:hover:bg-[#112766] text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="font-bold">{lang === 'bn' ? 'সকল অ্যাক্টিভ ইভেন্ট' : 'All Active Events'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold">
+                            {allActivePassCount.total} {lang === 'bn' ? 'পাস' : 'passes'}
+                          </span>
+                          {eventFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Active Events List */}
+                    {activeEvents.length > 0 ? (
+                      <div className="p-1 space-y-0.5">
+                        {activeEvents.map((ev) => {
+                          const isSelected = eventFilter === ev.id;
+                          const pCount = getEventPassCount(ev.id);
+                          return (
+                            <button
+                              key={ev.id}
+                              type="button"
+                              onClick={() => {
+                                setEventFilter(ev.id);
+                                setEventDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-2.5 rounded-lg flex items-center justify-between text-left transition-colors ${
+                                isSelected
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold'
+                                  : 'hover:bg-slate-50 dark:hover:bg-[#112766] text-slate-800 dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="min-w-0 pr-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="truncate font-semibold text-xs">
+                                    {lang === 'bn' ? ev.title.bn : ev.title.en}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Active
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  {ev.venue ? (lang === 'bn' ? ev.venue.bn : ev.venue.en) : ''}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  {pCount.total} {lang === 'bn' ? 'পাস' : 'passes'}
+                                </span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                        {lang === 'bn' ? 'কোনো অ্যাক্টিভ ইভেন্ট পাওয়া যায়নি' : 'No active events found'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {lang === 'bn' ? 'মোট নিবন্ধিত পাস:' : 'Total Registered Passes:'}{' '}
+            <span className="font-bold text-[#F26522]">{currentEventStats.total}</span>
+          </div>
         </div>
 
         {/* Scan & Verification Hub */}
@@ -448,11 +736,17 @@ export default function MatchdayCheckinPage() {
                 <div>
                   <h3 className="text-base font-black tracking-tight">{result.message}</h3>
                   {result.alreadyCheckedIn && (
-                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-1">
-                      {lang === 'bn'
-                        ? '⛔ একটি কিউআর কোড দ্বিতীয়বার স্ক্যান করা যাবে না! প্রবেশ ইতিমধ্যে নিবন্ধিত।'
-                        : '⛔ Multiple scans prevented! Team was already checked in earlier.'}
-                    </p>
+                    <div className="mt-2 space-y-1">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{lang === 'bn' ? 'দলটি ইতিমধ্যেই তালিকায় উপস্থিত (Already in the List)' : 'Already in the Entered List'}</span>
+                      </span>
+                      <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-1">
+                        {lang === 'bn'
+                          ? '⛔ একটি কিউআর কোড দ্বিতীয়বার স্ক্যান করা যাবে না! প্রবেশ ইতিমধ্যে নিবন্ধিত।'
+                          : '⛔ Multiple scans prevented! Team was already checked in earlier.'}
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -496,8 +790,8 @@ export default function MatchdayCheckinPage() {
                   >
                     <Clock className="w-4 h-4" />
                     <span>{lang === 'bn' ? 'অপেক্ষমান দল' : 'Pending Entry'}</span>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 text-white">
-                      {pendingList.length}
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 text-white font-mono">
+                      {filteredPending.length}
                     </span>
                   </button>
 
@@ -511,8 +805,8 @@ export default function MatchdayCheckinPage() {
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>{lang === 'bn' ? 'মাঠে প্রবেশকৃত দল' : 'Entered / Checked-In'}</span>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 text-white">
-                      {enteredList.length}
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 text-white font-mono">
+                      {filteredEntered.length}
                     </span>
                   </button>
                 </div>
@@ -535,14 +829,18 @@ export default function MatchdayCheckinPage() {
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
                   <span>
                     {lang === 'bn' ? 'মোট অপেক্ষমান দল:' : 'Pending in queue:'}{' '}
-                    <strong className="text-slate-900 dark:text-white">{pendingList.length}</strong>
+                    <strong className="text-slate-900 dark:text-white">
+                      {searchQuery ? filteredPending.length : currentEventStats.pending}
+                    </strong>
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <span>
                     {lang === 'bn' ? 'মাঠে মোট প্রবেশ:' : 'Entered the ground:'}{' '}
-                    <strong className="text-slate-900 dark:text-white">{enteredList.length}</strong>
+                    <strong className="text-slate-900 dark:text-white">
+                      {searchQuery ? filteredEntered.length : currentEventStats.entered}
+                    </strong>
                   </span>
                 </div>
               </div>
@@ -597,43 +895,61 @@ export default function MatchdayCheckinPage() {
                   </p>
                 </div>
               ) : (
-                filteredEntered.map((pass) => (
-                  <div
-                    key={pass.passId}
-                    className="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between gap-4 transition-all shadow-sm"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-black text-sm text-slate-900 dark:text-white">
-                          {pass.teamName}
-                        </h4>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>{lang === 'bn' ? 'ভেরিফায়েড প্রবেশ' : 'Entered'}</span>
-                        </span>
+                filteredEntered.map((pass) => {
+                  const isHighlighted = highlightedPassId === pass.passId;
+                  return (
+                    <div
+                      key={pass.passId}
+                      className={`p-4 rounded-2xl transition-all shadow-sm flex items-center justify-between gap-4 ${
+                        isHighlighted
+                          ? 'bg-amber-500/15 dark:bg-amber-950/40 border-2 border-amber-500 ring-4 ring-amber-400/20 shadow-lg shadow-amber-500/10 scale-[1.01]'
+                          : 'bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/30'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                            {pass.teamName}
+                          </h4>
+                          {isHighlighted ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-xs animate-pulse">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>{lang === 'bn' ? 'স্ক্যানকৃত দল (তালিকায় উপস্থিত)' : 'Scanned Team (Already in List)'}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>{lang === 'bn' ? 'ভেরিফায়েড প্রবেশ' : 'Entered'}</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {lang === 'bn' ? 'প্রতিনিধি:' : 'Rep:'} {pass.representativeName} •{' '}
+                          {pass.memberCount} {lang === 'bn' ? 'জন' : 'squad'} •{' '}
+                          <span className="font-mono text-slate-400">{pass.humanPassCode}</span>
+                        </p>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {lang === 'bn' ? 'প্রতিনিধি:' : 'Rep:'} {pass.representativeName} •{' '}
-                        {pass.memberCount} {lang === 'bn' ? 'জন' : 'squad'} •{' '}
-                        <span className="font-mono text-slate-400">{pass.humanPassCode}</span>
-                      </p>
-                    </div>
 
-                    <div className="text-right text-[11px] text-slate-500 dark:text-slate-400">
-                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>
-                          {pass.checkedInAt
-                            ? new Date(pass.checkedInAt).toLocaleTimeString()
-                            : 'Entered'}
+                      <div className="text-right text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                        <div
+                          className={`flex items-center justify-end gap-1 font-bold ${
+                            isHighlighted ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                          }`}
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          <span suppressHydrationWarning>
+                            {pass.checkedInAt
+                              ? new Date(pass.checkedInAt).toLocaleTimeString()
+                              : 'Entered'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">
+                          {pass.checkedInBy || 'Gate Officer'}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {pass.checkedInBy || 'Gate Officer'}
-                      </span>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

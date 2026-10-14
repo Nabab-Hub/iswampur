@@ -60,18 +60,35 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const actorEmail = req.headers.get('x-user-email') || 'admin';
+    const actorEmail = (req.headers.get('x-user-email') || '').toLowerCase().trim();
+    const SUPER_ADMIN_EMAIL = (process.env.SUPER_ADMIN_EMAIL || 'skahidulla568@gmail.com').toLowerCase().trim();
+
+    // STRICT PERMISSION CHECK: Only Superadmin skahidulla568@gmail.com has event delete permission!
+    if (actorEmail !== SUPER_ADMIN_EMAIL && actorEmail !== 'skahidulla568@gmail.com') {
+      return NextResponse.json(
+        {
+          error:
+            'অনুমতি নেই: শুধুমাত্র সুপারঅ্যাডমিন (skahidulla568@gmail.com) অনুষ্ঠান মুছে ফেলতে পারেন। (Forbidden: Only Super Admin skahidulla568@gmail.com is authorized to delete events)',
+        },
+        { status: 403 }
+      );
+    }
+
     await repository.deleteEvent(id);
 
     await repository.logAction({
       actorEmail,
-      actorRole: 'admin',
-      action: 'EVENT_DELETED',
+      actorRole: 'super_admin',
+      action: 'EVENT_AND_RELATED_DATA_DELETED',
       targetType: 'EVENT',
       targetId: id,
+      metadata: { deletedBy: actorEmail, cascadedCollections: ['registrations', 'passes', 'posts'] },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: 'Event and all related registrations, passes, and posts deleted successfully',
+    });
   } catch (error) {
     console.error('Failed to delete event:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

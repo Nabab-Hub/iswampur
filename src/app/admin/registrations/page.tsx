@@ -28,6 +28,7 @@ function RegistrationsReviewContent() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('id');
   const eventIdParam = searchParams.get('eventId');
+  const statusParam = searchParams.get('status');
 
   const { lang, t } = useLanguage();
   const toast = useToast();
@@ -37,7 +38,7 @@ function RegistrationsReviewContent() {
   const [loading, setLoading] = useState(true);
 
   // Filter & Search
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState(statusParam || 'ALL');
   const [eventFilter, setEventFilter] = useState(eventIdParam || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -70,6 +71,13 @@ function RegistrationsReviewContent() {
       if (evRes.ok) {
         const evData = await evRes.json();
         setEvents(evData);
+        // By default, select an active event if not specified in URL query params
+        if (!eventIdParam) {
+          const firstActive = evData.find((e: any) => e.registrationEnabled);
+          if (firstActive) {
+            setEventFilter((prev) => (prev === 'ALL' ? firstActive.id : prev));
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to load registrations:', err);
@@ -83,6 +91,12 @@ function RegistrationsReviewContent() {
       setEventFilter(eventIdParam);
     }
   }, [eventIdParam]);
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [statusParam]);
 
   useEffect(() => {
     loadRegistrations();
@@ -684,7 +698,7 @@ function RegistrationsReviewContent() {
                 </p>
                 <p><strong>{lang === 'bn' ? 'ফি:' : 'Fee:'}</strong> ₹{selectedReg.payment.amount}</p>
                 <p><strong>{lang === 'bn' ? 'UTR:' : 'UTR / Txn ID:'}</strong> {selectedReg.payment.utr || 'N/A'}</p>
-                <p><strong>{lang === 'bn' ? 'জমার সময়:' : 'Submitted:'}</strong> {new Date(selectedReg.createdAt).toLocaleString()}</p>
+                <p suppressHydrationWarning><strong>{lang === 'bn' ? 'জমার সময়:' : 'Submitted:'}</strong> {new Date(selectedReg.createdAt).toLocaleString()}</p>
                 {selectedReg.humanPassCode && (
                   <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-[#F9A01B] to-[#F26522] text-[#050D24] flex items-center justify-between shadow-sm">
                     <div>

@@ -23,6 +23,7 @@ import {
   setDoc,
   deleteDoc,
 } from 'firebase/firestore';
+import { extractPassIdOrCode } from '@/lib/pass/utils';
 
 function cleanForFirestore<T>(data: T): any {
   return JSON.parse(JSON.stringify(data));
@@ -556,14 +557,77 @@ export const repository = {
   },
 
   async deleteEvent(id: string): Promise<boolean> {
-    globalStore.events = globalStore.events.filter((e) => e.id !== id);
+    const targetEvent = globalStore.events.find((e) => e.id === id || e.slug === id);
+    const targetId = targetEvent ? targetEvent.id : id;
+    const targetSlug = targetEvent ? targetEvent.slug : id;
+
+    // 1. Remove event from memory
+    globalStore.events = globalStore.events.filter((e) => e.id !== targetId && e.slug !== targetSlug);
+
+    // 2. Cascading delete: Registrations associated with this event
+    const registrationsToDelete = globalStore.registrations.filter(
+      (r) => r.eventId === targetId || r.eventId === targetSlug
+    );
+    const deletedRegIds = new Set(registrationsToDelete.map((r) => r.id));
+    globalStore.registrations = globalStore.registrations.filter((r) => !deletedRegIds.has(r.id));
+
+    // 3. Cascading delete: Passes associated with this event or deleted registrations
+    const passesToDelete = globalStore.passes.filter(
+      (p) => p.eventId === targetId || p.eventId === targetSlug || deletedRegIds.has(p.registrationId)
+    );
+    const deletedPassIds = new Set(passesToDelete.map((p) => p.passId));
+    globalStore.passes = globalStore.passes.filter((p) => !deletedPassIds.has(p.passId));
+
+    // 4. Cascading delete: Posts / Announcements / Event Feed Posts linked to this event
+    const postsToDelete = globalStore.posts.filter(
+      (p) => p.eventId === targetId || p.eventId === targetSlug
+    );
+    const deletedPostIds = new Set(postsToDelete.map((p) => p.id));
+    globalStore.posts = globalStore.posts.filter((p) => !deletedPostIds.has(p.id));
+
+    // 5. Site settings cleanup if this was the active season or linked event
+    if (globalStore.settings) {
+      if (
+        globalStore.settings.activeSeasonId === targetId ||
+        globalStore.settings.activeSeasonId === targetSlug
+      ) {
+        globalStore.settings.activeSeasonId = '';
+      }
+    }
+
+    // 6. Firestore synchronization across all related collections
     if (db) {
       try {
-        await deleteDoc(doc(db, 'events', id));
+        await deleteDoc(doc(db, 'events', targetId));
       } catch (err) {
         console.warn('Firestore deleteEvent error:', err);
       }
+
+      for (const regId of deletedRegIds) {
+        try {
+          await deleteDoc(doc(db, 'registrations', regId));
+        } catch (err) {
+          console.warn('Firestore delete registration cascade error:', err);
+        }
+      }
+
+      for (const passId of deletedPassIds) {
+        try {
+          await deleteDoc(doc(db, 'passes', passId));
+        } catch (err) {
+          console.warn('Firestore delete pass cascade error:', err);
+        }
+      }
+
+      for (const postId of deletedPostIds) {
+        try {
+          await deleteDoc(doc(db, 'posts', postId));
+        } catch (err) {
+          console.warn('Firestore delete post cascade error:', err);
+        }
+      }
     }
+
     return true;
   },
 
@@ -799,49 +863,166 @@ export const repository = {
   },
 
   // Passes
-  async getPass(passId: string): Promise<TeamPass | null> {
+  async getPass(rawIdentifier: string): Promise<TeamPass | null> {
+    if (!rawIdentifier) return null;
+    const cleanId = extractPassIdOrCode(rawIdentifier);
+    const cleanUpper = cleanId.toUpperCase();
+    const rawUpper = rawIdentifier.trim().toUpperCase();
+
+    const matchesPass = (p: TeamPass) => {
+      const pId = p.passId || '';
+      const pCode = (p.humanPassCode || '').toUpperCase();
+      return (
+        pId === cleanId ||
+        pId === rawIdentifier ||
+        pCode === cleanUpper ||
+        pCode === rawUpper ||
+        (cleanId && pId.includes(cleanId)) ||
+        (rawIdentifier && rawIdentifier.includes(pId)) ||
+        (pCode && rawUpper.includes(pCode))
+      );
+    };
+
     if (db) {
       try {
-        const snap = await getDoc(doc(db, 'passes', passId));
+        const snap = await getDoc(doc(db, 'passes', cleanId || rawIdentifier));
         if (snap.exists()) {
           return snap.data() as TeamPass;
         }
         const allPasses = await getDocs(collection(db, 'passes'));
         if (!allPasses.empty) {
-          const found = allPasses.docs.map((d) => d.data() as TeamPass).find(
-            (p) => p.passId === passId || p.humanPassCode.toUpperCase() === passId.toUpperCase()
-          );
+          const found = allPasses.docs.map((d) => d.data() as TeamPass).find(matchesPass);
           if (found) return found;
         }
       } catch (err) {
         console.warn('Firestore getPass error, falling back:', err);
       }
     }
-    return (
-      globalStore.passes.find(
-        (p) => p.passId === passId || p.humanPassCode.toUpperCase() === passId.toUpperCase()
-      ) || null
-    );
+    const foundLocal = globalStore.passes.find(matchesPass);
+    if (foundLocal) return foundLocal;
+
+    // Fallback: check if rawIdentifier matches an approved registration whose pass record wasn't persisted
+    try {
+      const allRegs = await this.getRegistrations();
+      const matchedReg = allRegs.find(
+        (r) =>
+          r.status === 'APPROVED' &&
+          (r.passId === cleanId ||
+            r.passId === rawIdentifier ||
+            r.humanPassCode?.toUpperCase() === cleanUpper ||
+            r.humanPassCode?.toUpperCase() === rawUpper ||
+            r.id === cleanId)
+      );
+      if (matchedReg) {
+        const events = await this.getEvents();
+        const ev = events.find((e) => e.id === matchedReg.eventId);
+        const passId = matchedReg.passId || `pass_${matchedReg.id.replace('reg_', '')}`;
+        const humanPassCode = matchedReg.humanPassCode || cleanUpper;
+        const { computePassSignature } = await import('@/lib/pass/generator');
+        const signature = computePassSignature({
+          passId,
+          registrationId: matchedReg.id,
+          teamName: matchedReg.team.name,
+          eventId: matchedReg.eventId,
+        });
+
+        const synthesizedPass: TeamPass = {
+          passId,
+          humanPassCode,
+          registrationId: matchedReg.id,
+          eventId: matchedReg.eventId,
+          eventTitle: ev?.title || { bn: matchedReg.team.name, en: matchedReg.team.name },
+          teamName: matchedReg.team.name,
+          representativeName: matchedReg.team.representativeName,
+          memberCount: matchedReg.team.members?.length || 1,
+          issuedAt: matchedReg.reviewedAt || matchedReg.updatedAt || new Date().toISOString(),
+          status: 'ACTIVE',
+          venue: ev?.venue || { bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ', en: 'Iswampur Central Sports Ground' },
+          eventDate: ev?.startDate || '২০২৬',
+          signature,
+        };
+        await this.savePass(synthesizedPass);
+        return synthesizedPass;
+      }
+    } catch (fallbackErr) {
+      console.warn('Fallback getPass error:', fallbackErr);
+    }
+
+    return null;
   },
 
   async getAllPasses(): Promise<TeamPass[]> {
+    let items: TeamPass[] = [];
     if (db) {
       try {
         const snap = await getDocs(collection(db, 'passes'));
         if (!snap.empty) {
-          const items = snap.docs.map((d) => d.data() as TeamPass);
+          items = snap.docs.map((d) => d.data() as TeamPass);
           globalStore.passes = items;
-          return items;
         } else if (globalStore.passes.length > 0) {
+          items = [...globalStore.passes];
           for (const p of globalStore.passes) {
             await setDoc(doc(db, 'passes', p.passId), cleanForFirestore(p));
           }
         }
       } catch (err) {
         console.warn('Firestore getAllPasses error:', err);
+        items = [...globalStore.passes];
       }
+    } else {
+      items = [...globalStore.passes];
     }
-    return globalStore.passes;
+
+    // Auto-reconcile: ensure all APPROVED registrations have a valid TeamPass
+    try {
+      const registrations = await this.getRegistrations();
+      const existingPassIds = new Set(items.map((p) => p.passId));
+      const existingRegIds = new Set(items.map((p) => p.registrationId));
+      const events = await this.getEvents();
+      const { computePassSignature } = await import('@/lib/pass/generator');
+
+      for (const reg of registrations) {
+        if (
+          reg.status === 'APPROVED' &&
+          (!existingRegIds.has(reg.id) || (reg.passId && !existingPassIds.has(reg.passId)))
+        ) {
+          const passId = reg.passId || `pass_${reg.id.replace('reg_', '')}`;
+          const humanPassCode =
+            reg.humanPassCode || `ISW-PASS-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          const ev = events.find((e) => e.id === reg.eventId);
+
+          const newPass: TeamPass = {
+            passId,
+            humanPassCode,
+            registrationId: reg.id,
+            eventId: reg.eventId,
+            eventTitle: ev?.title || { bn: reg.team.name, en: reg.team.name },
+            teamName: reg.team.name,
+            representativeName: reg.team.representativeName,
+            memberCount: reg.team.members?.length || 1,
+            issuedAt: reg.reviewedAt || reg.updatedAt || new Date().toISOString(),
+            status: 'ACTIVE',
+            venue: ev?.venue || { bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ', en: 'Iswampur Central Sports Ground' },
+            eventDate: ev?.startDate || '২০২৬',
+            signature: computePassSignature({
+              passId,
+              registrationId: reg.id,
+              teamName: reg.team.name,
+              eventId: reg.eventId,
+            }),
+          };
+
+          await this.savePass(newPass);
+          items.push(newPass);
+          existingPassIds.add(passId);
+          existingRegIds.add(reg.id);
+        }
+      }
+    } catch (reconcileErr) {
+      console.warn('Pass reconciliation error:', reconcileErr);
+    }
+
+    return items;
   },
 
   async savePass(pass: TeamPass): Promise<TeamPass> {

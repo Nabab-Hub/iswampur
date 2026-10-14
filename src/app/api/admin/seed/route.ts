@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/client';
 import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
 import { repository } from '@/lib/db/repository';
-import { VillageEvent, TeamRegistration } from '@/types';
+import { VillageEvent, TeamRegistration, TeamPass } from '@/types';
+import { computePassSignature } from '@/lib/pass/generator';
 
 function cleanForFirestore<T>(data: T): any {
   return JSON.parse(JSON.stringify(data));
@@ -657,7 +658,7 @@ export async function POST(req: NextRequest) {
       seededEvents++;
     }
 
-    // 2. Seed Registrations
+    // 2. Seed Registrations & Passes
     for (const reg of DUMMY_REGISTRATIONS) {
       await repository.saveRegistration(reg);
       if (db) {
@@ -667,6 +668,33 @@ export async function POST(req: NextRequest) {
           console.warn(`Firestore registration seed error for ${reg.id}:`, e);
         }
       }
+
+      // If approved, seed corresponding pass as well
+      if (reg.status === 'APPROVED' && reg.passId) {
+        const ev = DUMMY_EVENTS.find((e) => e.id === reg.eventId);
+        const pass: TeamPass = {
+          passId: reg.passId,
+          humanPassCode: reg.humanPassCode || reg.passId,
+          registrationId: reg.id,
+          eventId: reg.eventId,
+          eventTitle: ev?.title || { bn: reg.team.name, en: reg.team.name },
+          teamName: reg.team.name,
+          representativeName: reg.team.representativeName,
+          memberCount: reg.team.members?.length || 1,
+          issuedAt: reg.updatedAt || new Date().toISOString(),
+          status: 'ACTIVE',
+          venue: ev?.venue || { bn: 'ঈশ্বমপুর কেন্দ্রীয় খেলার মাঠ', en: 'Iswampur Central Sports Ground' },
+          eventDate: ev?.startDate || '২০২৬',
+          signature: computePassSignature({
+            passId: reg.passId,
+            registrationId: reg.id,
+            teamName: reg.team.name,
+            eventId: reg.eventId,
+          }),
+        };
+        await repository.savePass(pass);
+      }
+
       seededRegistrations++;
     }
 

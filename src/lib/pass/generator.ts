@@ -300,30 +300,34 @@ export async function generatePassPdf(
     height: 175,
   });
 
-  const qrTextX = 255;
+  const qrTextX = 252;
+  const qrTextRightEdge = width - 36 - 16;
+  const qrBoxWidth = qrTextRightEdge - qrTextX;
 
   page.drawText('INSTANT SMARTPHONE GATE VERIFICATION', {
     x: qrTextX,
-    y: qrSectionY + 185,
-    size: 11,
+    y: qrSectionY + 192,
+    size: 10.5,
     font: fontBold,
     color: navyMid,
   });
 
   page.drawText('Scan QR with any smartphone to open the live server verification page.', {
     x: qrTextX,
-    y: qrSectionY + 168,
-    size: 8.5,
+    y: qrSectionY + 177,
+    size: 8,
     font: fontRegular,
     color: rgb(0.35, 0.4, 0.5),
   });
 
-  // Prominent Pass ID Box
+  // Prominent Pass ID Box - Two-tier layout so code & database ID never overflow
+  const idBoxY = qrSectionY + 118;
+  const idBoxHeight = 48;
   page.drawRectangle({
     x: qrTextX,
-    y: qrSectionY + 115,
-    width: width - 72 - 255 - 20,
-    height: 42,
+    y: idBoxY,
+    width: qrBoxWidth,
+    height: idBoxHeight,
     color: rgb(0.94, 0.97, 1),
     borderColor: blueElectric,
     borderWidth: 1,
@@ -331,41 +335,68 @@ export async function generatePassPdf(
 
   page.drawText('UNIQUE PASS ID (FOR GROUND DATABASE):', {
     x: qrTextX + 10,
-    y: qrSectionY + 142,
+    y: idBoxY + 34,
     size: 7.5,
     font: fontBold,
     color: navyMid,
   });
 
-  page.drawText(`${pass.humanPassCode} (${pass.passId})`, {
+  page.drawText(pass.humanPassCode, {
     x: qrTextX + 10,
-    y: qrSectionY + 125,
-    size: 9.5,
+    y: idBoxY + 19,
+    size: 11,
     font: fontBold,
     color: orangeFire,
   });
 
+  page.drawText(`System Ref: ${pass.passId}`, {
+    x: qrTextX + 10,
+    y: idBoxY + 7,
+    size: 7.5,
+    font: fontRegular,
+    color: rgb(0.2, 0.3, 0.45),
+  });
+
   page.drawText(`Issued: ${new Date(pass.issuedAt).toLocaleDateString()}`, {
     x: qrTextX,
-    y: qrSectionY + 95,
-    size: 9,
+    y: qrSectionY + 100,
+    size: 8.5,
     font: fontRegular,
     color: rgb(0.3, 0.35, 0.45),
   });
 
-  page.drawText(`Cryptographic Signature: ${pass.signature.substring(0, 28)}...`, {
+  // Full Cryptographic Signature Display with security badge
+  page.drawText('Cryptographic Security Signature (SHA-256):', {
     x: qrTextX,
-    y: qrSectionY + 78,
-    size: 8,
+    y: qrSectionY + 86,
+    size: 7.5,
+    font: fontBold,
+    color: navyMid,
+  });
+
+  page.drawRectangle({
+    x: qrTextX,
+    y: qrSectionY + 68,
+    width: qrBoxWidth,
+    height: 15,
+    color: rgb(0.95, 0.96, 0.98),
+    borderColor: rgb(0.85, 0.88, 0.94),
+    borderWidth: 0.5,
+  });
+
+  page.drawText(pass.signature, {
+    x: qrTextX + 5,
+    y: qrSectionY + 73,
+    size: 6.5,
     font: fontRegular,
-    color: rgb(0.4, 0.45, 0.55),
+    color: rgb(0.25, 0.3, 0.4),
   });
 
   // Entry Status Banner
   page.drawRectangle({
     x: qrTextX,
-    y: qrSectionY + 35,
-    width: 240,
+    y: qrSectionY + 28,
+    width: qrBoxWidth,
     height: 28,
     color: rgb(0.9, 0.98, 0.92),
     borderColor: rgb(0.1, 0.65, 0.3),
@@ -373,20 +404,20 @@ export async function generatePassPdf(
   });
 
   page.drawText('STATUS: OFFICIAL CONFIRMED ENTRY', {
-    x: qrTextX + 12,
-    y: qrSectionY + 44,
-    size: 10,
+    x: qrTextX + 14,
+    y: qrSectionY + 37,
+    size: 9.5,
     font: fontBold,
     color: rgb(0.08, 0.5, 0.22),
   });
 
   // Bottom Notice: Official Ground Entry Rules
-  const noticeY = 40;
+  const noticeY = 38;
   page.drawRectangle({
     x: 36,
     y: noticeY,
     width: width - 72,
-    height: 95,
+    height: 96,
     color: rgb(0.96, 0.97, 1),
     borderColor: navyMid,
     borderWidth: 1,
@@ -408,17 +439,17 @@ export async function generatePassPdf(
     color: rgb(0.2, 0.25, 0.35),
   });
 
-  page.drawText('2. All squad members must carry valid government/school photo identification matching registered roster names.', {
+  page.drawText('2. QR code will be scanned at ground entry. Any counterfeit or duplicate pass attempt', {
     x: 52,
-    y: noticeY + 42,
-    size: 8.5,
-    font: fontRegular,
-    color: rgb(0.2, 0.25, 0.35),
+    y: noticeY + 41,
+    size: 8,
+    font: fontBold,
+    color: orangeFire,
   });
 
-  page.drawText('3. QR code will be scanned at ground entry. Any counterfeit or duplicate pass attempt leads to immediate team disqualification.', {
-    x: 52,
-    y: noticeY + 26,
+  page.drawText('leads to immediate team disqualification.', {
+    x: 63,
+    y: noticeY + 29,
     size: 8,
     font: fontBold,
     color: orangeFire,
@@ -426,7 +457,7 @@ export async function generatePassPdf(
 
   page.drawText('Issued by: Iswampur Tournament Committee & Village Council | Contact: support@iswampur.in', {
     x: 52,
-    y: noticeY + 12,
+    y: noticeY + 13,
     size: 7.5,
     font: fontRegular,
     color: rgb(0.4, 0.45, 0.55),

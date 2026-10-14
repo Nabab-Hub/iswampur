@@ -471,7 +471,7 @@ function AdminPostsContent() {
                         </span>
                         <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
                           <Calendar className="w-3 h-3 text-slate-400" />
-                          <span>{notice.date || new Date(notice.createdAt).toLocaleDateString()}</span>
+                          <span suppressHydrationWarning>{notice.date || new Date(notice.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
 
@@ -609,7 +609,7 @@ function AdminPostsContent() {
                             </div>
                           </div>
 
-                          <span className="text-[11px] font-mono text-slate-400 shrink-0 mt-0.5">
+                          <span suppressHydrationWarning className="text-[11px] font-mono text-slate-400 shrink-0 mt-0.5">
                             {new Date(post.createdAt).toLocaleDateString()}
                           </span>
                         </div>

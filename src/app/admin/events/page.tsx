@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { useAuth } from '@/lib/auth/authContext';
 import { useLanguage } from '@/lib/i18n/context';
 import { VillageEvent, FormFieldDefinition, EventFormPresets } from '@/types';
 import {
@@ -78,8 +79,14 @@ const DEFAULT_FORM_PRESETS: EventFormPresets = {
 type ModalTab = 'basic' | 'registration' | 'form_builder' | 'rules';
 
 export default function AdminEventsPage() {
+  const { user } = useAuth();
   const { lang, resolveBilingual } = useLanguage();
   const toast = useToast();
+
+  const isSuperAdmin = Boolean(
+    user && user.email?.toLowerCase().trim() === 'skahidulla568@gmail.com'
+  );
+
   const [events, setEvents] = useState<VillageEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -492,11 +499,33 @@ export default function AdminEventsPage() {
 
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
+    if (!isSuperAdmin) {
+      toast.error(
+        lang === 'bn'
+          ? 'অনুমতি নেই: শুধুমাত্র সুপারঅ্যাডমিন (skahidulla568@gmail.com) অনুষ্ঠান মুছে ফেলতে পারেন।'
+          : 'Permission denied: Only Super Admin (skahidulla568@gmail.com) can delete events.'
+      );
+      setDeleteTargetId(null);
+      return;
+    }
+
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/events/${deleteTargetId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
-      toast.success(lang === 'bn' ? 'অনুষ্ঠানটি সফলভাবে মুছে ফেলা হয়েছে' : 'Event deleted successfully');
+      const res = await fetch(`/api/events/${deleteTargetId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-email': user?.email || '',
+        },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete');
+      }
+      toast.success(
+        lang === 'bn'
+          ? 'অনুষ্ঠান এবং সংশ্লিষ্ট সমস্ত তথ্য (রেজিস্ট্রেশন, পাস, পোস্ট) সফলভাবে মুছে ফেলা হয়েছে'
+          : 'Event and all associated data (registrations, passes, posts) deleted successfully'
+      );
       setDeleteTargetId(null);
       loadEvents();
     } catch (err: any) {
@@ -753,13 +782,27 @@ export default function AdminEventsPage() {
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
-                            <button
-                              onClick={() => setDeleteTargetId(ev.id)}
-                              className="p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 transition-colors inline-flex items-center justify-center"
-                              title={lang === 'bn' ? 'মুছুন' : 'Delete'}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {isSuperAdmin ? (
+                              <button
+                                onClick={() => setDeleteTargetId(ev.id)}
+                                className="p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 transition-colors inline-flex items-center justify-center cursor-pointer"
+                                title={lang === 'bn' ? 'অনুষ্ঠান মুছুন (সুপারঅ্যাডমিন)' : 'Delete Event (Super Admin Only)'}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <button
+                                disabled
+                                className="p-2 rounded-lg text-slate-300 dark:text-slate-600 cursor-not-allowed inline-flex items-center justify-center opacity-40"
+                                title={
+                                  lang === 'bn'
+                                    ? 'অনুমতি নেই: শুধুমাত্র সুপারঅ্যাডমিন (skahidulla568@gmail.com) ইভেন্ট মুছতে পারেন'
+                                    : 'Restricted: Only Super Admin (skahidulla568@gmail.com) can delete events'
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -843,13 +886,27 @@ export default function AdminEventsPage() {
                         <span>{lang === 'bn' ? 'সম্পাদনা' : 'Edit'}</span>
                       </button>
 
-                      <button
-                        onClick={() => setDeleteTargetId(ev.id)}
-                        className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50"
-                        title={lang === 'bn' ? 'মুছুন' : 'Delete'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isSuperAdmin ? (
+                        <button
+                          onClick={() => setDeleteTargetId(ev.id)}
+                          className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 cursor-pointer"
+                          title={lang === 'bn' ? 'মুছুন (সুপারঅ্যাডমিন)' : 'Delete (Super Admin Only)'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="p-2 rounded-xl text-slate-400 border border-slate-200 dark:border-slate-800 opacity-40 cursor-not-allowed"
+                          title={
+                            lang === 'bn'
+                              ? 'অনুমতি নেই: শুধুমাত্র সুপারঅ্যাডমিন (skahidulla568@gmail.com) ইভেন্ট মুছতে পারেন'
+                              : 'Restricted: Only Super Admin (skahidulla568@gmail.com) can delete events'
+                          }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -2322,13 +2379,13 @@ export default function AdminEventsPage() {
         {/* Delete Confirmation Modal */}
         <ConfirmModal
           isOpen={Boolean(deleteTargetId)}
-          title={lang === 'bn' ? 'অনুষ্ঠান মুছে ফেলা নিশ্চিতকরণ' : 'Confirm Event Deletion'}
+          title={lang === 'bn' ? 'অনুষ্ঠান এবং সংশ্লিষ্ট সমস্ত তথ্য মুছে ফেলা' : 'Delete Event & All Related Data'}
           message={
             lang === 'bn'
-              ? 'আপনি কি নিশ্চিত যে এই অনুষ্ঠানটি মুছে ফেলতে চান? এটি মুছে ফেললে এর সাথে যুক্ত নিবন্ধন ও ফর্ম কনফিগারেশন সম্পূর্ণরূপে অপসারিত হবে।'
-              : 'Are you sure you want to delete this event and its associated registration configuration?'
+              ? 'সতর্কতা: এই অনুষ্ঠানটি মুছে ফেললে এর সাথে সম্পর্কিত সমস্ত তথ্য—সমস্ত দলীয় রেজিস্ট্রেশন, অফিসিয়াল টিম পাস, ম্যাচডে কিউআর চেক-ইন রেকর্ড এবং সম্পর্কিত সমস্ত পোস্ট—চিরতরে মুছে যাবে! আপনি কি নিশ্চিতভাবে মুছে ফেলতে চান?'
+              : 'CRITICAL WARNING: Deleting this event will PERMANENTLY erase all related data—including all team registrations, official matchday passes, QR check-in records, and associated event posts! Are you sure you want to proceed?'
           }
-          confirmText={lang === 'bn' ? 'হ্যাঁ, মুছে ফেলুন' : 'Yes, Delete Event'}
+          confirmText={lang === 'bn' ? 'হ্যাঁ, সমস্ত ডাটা সহ মুছে ফেলুন' : 'Yes, Delete Event & All Data'}
           cancelText={lang === 'bn' ? 'বাতিল' : 'Cancel'}
           isDestructive={true}
           isLoading={isDeleting}
