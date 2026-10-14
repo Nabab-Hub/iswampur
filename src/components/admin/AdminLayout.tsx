@@ -72,8 +72,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setMounted(true);
   }, []);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const isSuperAdmin = user?.role === 'super_admin';
+  const userEmail = user?.email?.toLowerCase().trim();
+  const isSuperAdmin = user?.role === 'super_admin' || userEmail === 'skahidulla568@gmail.com';
+  const isAdmin = user?.role === 'admin' || isSuperAdmin;
 
   // 1. Loading state (Guaranteed same on SSR and initial client hydration pass)
   if (!mounted || loading) {
@@ -223,6 +224,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       label: lang === 'bn' ? 'সাইট কন্টেন্ট ও পেমেন্ট' : 'Site Content & Payment QR',
       icon: Settings,
       show: hasPermission('content.manage') || isSuperAdmin,
+    },
+    {
+      href: '/super-admin',
+      label: lang === 'bn' ? 'সুপার অ্যাডমিন কনসোল' : 'Super Admin Console',
+      icon: ShieldCheck,
+      show: isSuperAdmin,
     },
   ];
 

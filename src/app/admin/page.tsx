@@ -26,12 +26,22 @@ import {
   RefreshCw,
   Eye,
   Layers,
+  Swords,
+  ShieldCheck,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/lib/auth/authContext';
 
 export default function AdminDashboardPage() {
   const { lang, t } = useLanguage();
+  const { user } = useAuth();
   const toast = useToast();
+
+  const isSuperAdmin = useMemo(() => {
+    const email = user?.email?.toLowerCase().trim();
+    return Boolean(user && (user.role === 'super_admin' || email === 'skahidulla568@gmail.com'));
+  }, [user]);
+
   const [registrations, setRegistrations] = useState<TeamRegistration[]>([]);
   const [events, setEvents] = useState<VillageEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -505,11 +515,11 @@ export default function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/events"
+              href="/admin/fixtures"
               className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-[#071333] dark:hover:bg-[#0d1f4d] text-slate-800 dark:text-slate-100 flex items-center gap-2 border border-slate-200 dark:border-[#1d3575] dark:hover:border-[#F26522]/60 transition-all hover:scale-[1.02] shadow-xs"
             >
-              <Plus className="w-4 h-4 text-[#F26522]" />
-              <span>{lang === 'bn' ? 'নতুন অনুষ্ঠান তৈরি করুন' : 'Create New Event'}</span>
+              <Swords className="w-4 h-4 text-[#F26522]" />
+              <span>{lang === 'bn' ? 'ম্যাচ ফিক্সচার ও লটারি ড্র' : 'Match Fixtures & Draw'}</span>
             </Link>
 
             <Link
@@ -524,9 +534,19 @@ export default function AdminDashboardPage() {
               href="/admin/events"
               className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-[#071333] dark:hover:bg-[#0d1f4d] text-slate-800 dark:text-slate-100 flex items-center gap-2 border border-slate-200 dark:border-[#1d3575] dark:hover:border-[#F26522]/60 transition-all hover:scale-[1.02] shadow-xs"
             >
-              <Calendar className="w-4 h-4 text-[#F26522]" />
-              <span>{lang === 'bn' ? 'অনুষ্ঠান ও ফর্ম' : 'Events & Forms'}</span>
+              <Plus className="w-4 h-4 text-[#F26522]" />
+              <span>{lang === 'bn' ? 'অনুষ্ঠান ব্যবস্থাপনা' : 'Events Management'}</span>
             </Link>
+
+            {isSuperAdmin && (
+              <Link
+                href="/super-admin"
+                className="px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-[#F26522] to-[#F9A01B] text-[#050D24] flex items-center gap-2 shadow-md hover:brightness-110 transition-all hover:scale-[1.02]"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#050D24]" />
+                <span>{lang === 'bn' ? 'সুপার অ্যাডমিন কনসোল' : 'Super Admin Console'}</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -675,7 +695,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Card Action Buttons */}
-                  <div className="p-4 bg-slate-50/70 dark:bg-[#071333]/60 border-t border-slate-200 dark:border-[#1d3575] flex items-center justify-between gap-2">
+                  <div className="p-4 bg-slate-50/70 dark:bg-[#071333]/60 border-t border-slate-200 dark:border-[#1d3575] flex items-center justify-between gap-2 flex-wrap">
                     <Link
                       href={`/admin/registrations?eventId=${ev.id}`}
                       className="px-3.5 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:brightness-110 flex items-center gap-1.5 shadow-xs transition-all hover:scale-[1.02]"
@@ -688,13 +708,25 @@ export default function AdminDashboardPage() {
                       </span>
                     </Link>
 
-                    <Link
-                      href="/admin/events"
-                      className="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#1d3575] bg-white dark:bg-[#0c1a40] hover:border-[#F26522] transition-colors flex items-center gap-1"
-                    >
-                      <span>{lang === 'bn' ? 'ইভেন্ট সম্পাদন' : 'Edit Event'}</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      {ev.category === 'cricket' && (
+                        <Link
+                          href="/admin/fixtures"
+                          className="px-3 py-2 rounded-xl text-xs font-bold text-[#19398A] dark:text-[#00A3E0] hover:text-[#F26522] border border-[#19398A]/30 dark:border-[#00A3E0]/30 bg-blue-50/50 dark:bg-[#071333] transition-colors flex items-center gap-1 hover:scale-[1.02]"
+                        >
+                          <Swords className="w-3.5 h-3.5 text-[#F26522]" />
+                          <span>{lang === 'bn' ? 'ম্যাচ ফিক্সচার' : 'Fixtures'}</span>
+                        </Link>
+                      )}
+
+                      <Link
+                        href="/admin/events"
+                        className="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#1d3575] bg-white dark:bg-[#0c1a40] hover:border-[#F26522] transition-colors flex items-center gap-1 hover:scale-[1.02]"
+                      >
+                        <span>{lang === 'bn' ? 'ইভেন্ট সম্পাদন' : 'Edit Event'}</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -366,6 +366,7 @@ export interface TournamentBracketData {
   standings?: TournamentStandings;
   activeRoundNumber: number;
   isComplete: boolean;
+  showOnPublicPages?: boolean; // Controls whether live fixtures & winners show on Home & IPL public pages
   createdAt: string;
   updatedAt: string;
 }

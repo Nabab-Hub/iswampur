@@ -87,6 +87,24 @@ export async function PATCH(
               name: finalMatch.loserName,
             };
           }
+
+          // Populate 3rd place from semi-final losing contenders
+          if (!bracket.standings.thirdPlace && bracket.rounds.length >= 2) {
+            const semiRound = bracket.rounds.find(
+              (r) =>
+                r.roundNumber === currentRound.roundNumber - 1 ||
+                r.roundName.en.toLowerCase().includes('semi')
+            );
+            if (semiRound) {
+              const semiLoser = semiRound.matches.find((m) => m.loserId && m.loserName);
+              if (semiLoser && semiLoser.loserId && semiLoser.loserName) {
+                bracket.standings.thirdPlace = {
+                  id: semiLoser.loserId,
+                  name: semiLoser.loserName,
+                };
+              }
+            }
+          }
         }
       }
     } else {

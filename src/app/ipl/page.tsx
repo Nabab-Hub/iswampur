@@ -9,6 +9,7 @@ import { useLanguage } from '@/lib/i18n/context';
 import { IPLSeason, TeamRegistration } from '@/types';
 import { Trophy, FileText, Users, ArrowRight, Calendar, MapPin, CheckCircle2, Flame, ShieldCheck, Sparkles } from 'lucide-react';
 import LiveBracketSection from '@/components/tournament/LiveBracketSection';
+import TournamentPodium from '@/components/tournament/TournamentPodium';
 
 export default function IPLHomePage() {
   const { lang, t, resolveBilingual } = useLanguage();
@@ -166,9 +167,12 @@ export default function IPLHomePage() {
             </div>
           </div>
 
+          {/* Tournament Victory Podium (1st, 2nd, 3rd) */}
+          <TournamentPodium eventId="event-ipl-2026" />
+
           {/* Live Tournament Bracket & Fixtures */}
           <div id="fixtures" className="scroll-mt-24">
-            <LiveBracketSection eventId="iswampur-premier-league-2026" />
+            <LiveBracketSection eventId="event-ipl-2026" />
           </div>
 
           {/* Rules Preview Box */}

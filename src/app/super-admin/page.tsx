@@ -37,29 +37,44 @@ import {
   Sparkles,
   Phone,
   Loader2,
+  Swords,
+  QrCode,
+  Calendar,
+  Crown,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
-const ALL_PERMISSIONS: { key: PermissionKey; labelBn: string; labelEn: string }[] = [
-  { key: 'events.manage', labelBn: 'অনুষ্ঠান তৈরি ও সম্পাদনা (Events)', labelEn: 'Events Management' },
-  { key: 'gallery.manage', labelBn: 'গ্যালারি ছবি ও ক্যাপশন (Gallery)', labelEn: 'Gallery Management' },
-  { key: 'notices.manage', labelBn: 'বিজ্ঞপ্তি ও ঘোষণা (Announcements)', labelEn: 'Notices & Announcements' },
-  { key: 'content.manage', labelBn: 'সাইট কন্টেন্ট ও হোমপেজ (Content)', labelEn: 'Site Content & Home' },
-  { key: 'registrations.view', labelBn: 'দল নিবন্ধন দেখা (View Reg)', labelEn: 'View Registrations' },
-  { key: 'registrations.review', labelBn: 'অনুমোদন ও পাস ইস্যু (Review/Approve)', labelEn: 'Review & Issue Passes' },
-  { key: 'registrations.export', labelBn: 'CSV এক্সপোর্ট (Export)', labelEn: 'Export Registrations (CSV)' },
-  { key: 'payments.verify', labelBn: 'পেমেন্ট স্ক্রিনশট যাচাই (Payment)', labelEn: 'Verify Payment Screenshots' },
-  { key: 'passes.manage', labelBn: 'টিম পাস ব্যবস্থাপনা (Passes)', labelEn: 'Team Passes Management' },
-  { key: 'matchday.checkin', labelBn: 'মাঠের কিউআর চেক-ইন (Matchday Checkin)', labelEn: 'Matchday QR Check-in' },
-  { key: 'ipl.manage', labelBn: 'আইপিএল রুলস ও টুর্নামেন্ট (IPL)', labelEn: 'IPL Rules & Tournament' },
-  { key: 'settings.manage', labelBn: 'সিস্টেম সেটিংস (Settings)', labelEn: 'System Settings' },
+const ALL_PERMISSIONS: {
+  key: PermissionKey;
+  labelBn: string;
+  labelEn: string;
+  shortBn: string;
+  shortEn: string;
+}[] = [
+  { key: 'events.manage', labelBn: 'অনুষ্ঠান তৈরি ও সম্পাদনা (Events)', labelEn: 'Events Management', shortBn: 'ইভেন্ট', shortEn: 'Events' },
+  { key: 'gallery.manage', labelBn: 'গ্যালারি ছবি ও ক্যাপশন (Gallery)', labelEn: 'Gallery Management', shortBn: 'গ্যালারি', shortEn: 'Gallery' },
+  { key: 'notices.manage', labelBn: 'বিজ্ঞপ্তি ও ঘোষণা (Announcements)', labelEn: 'Notices & Announcements', shortBn: 'বিজ্ঞপ্তি', shortEn: 'Notices' },
+  { key: 'content.manage', labelBn: 'সাইট কন্টেন্ট ও হোমপেজ (Content)', labelEn: 'Site Content & Home', shortBn: 'কন্টেন্ট', shortEn: 'Content' },
+  { key: 'registrations.view', labelBn: 'দল নিবন্ধন দেখা (View Reg)', labelEn: 'View Registrations', shortBn: 'রেজি: দেখা', shortEn: 'Reg: View' },
+  { key: 'registrations.review', labelBn: 'অনুমোদন ও পাস ইস্যু (Review/Approve)', labelEn: 'Review & Issue Passes', shortBn: 'অনুমোদন', shortEn: 'Reg: Review' },
+  { key: 'registrations.export', labelBn: 'CSV এক্সপোর্ট (Export)', labelEn: 'Export Registrations (CSV)', shortBn: 'এক্সপোর্ট', shortEn: 'Reg: Export' },
+  { key: 'payments.verify', labelBn: 'পেমেন্ট স্ক্রিনশট যাচাই (Payment)', labelEn: 'Verify Payment Screenshots', shortBn: 'পেমেন্ট', shortEn: 'Payments' },
+  { key: 'passes.manage', labelBn: 'টিম পাস ব্যবস্থাপনা (Passes)', labelEn: 'Team Passes Management', shortBn: 'পাস', shortEn: 'Passes' },
+  { key: 'matchday.checkin', labelBn: 'মাঠের কিউআর চেক-ইন (Matchday Checkin)', labelEn: 'Matchday QR Check-in', shortBn: 'চেক-ইন', shortEn: 'Check-in' },
+  { key: 'ipl.manage', labelBn: 'ম্যাচ ফিক্সচার ও আইপিএল (IPL/Fixtures)', labelEn: 'IPL & Match Fixtures', shortBn: 'ফিক্সচার', shortEn: 'Fixtures' },
+  { key: 'settings.manage', labelBn: 'সিস্টেম সেটিংস (Settings)', labelEn: 'System Settings', shortBn: 'সেটিংস', shortEn: 'Settings' },
 ];
 
 export default function SuperAdminPage() {
   const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const toast = useToast();
+
+  const isSuperAdmin = React.useMemo(() => {
+    const email = user?.email?.toLowerCase().trim();
+    return Boolean(user && (user.role === 'super_admin' || email === 'skahidulla568@gmail.com'));
+  }, [user]);
 
   const [activeTab, setActiveTab] = useState<'teams' | 'users' | 'admins' | 'audit'>('teams');
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -136,12 +151,12 @@ export default function SuperAdminPage() {
   };
 
   useEffect(() => {
-    if (!authLoading && user && user.role === 'super_admin') {
+    if (!authLoading && user && isSuperAdmin) {
       loadData();
     } else if (!authLoading) {
       setLoading(false);
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, isSuperAdmin]);
 
   const handleCopyAllTeamEmails = () => {
     if (uniqueTeamEmails.length === 0) {
@@ -390,7 +405,7 @@ export default function SuperAdminPage() {
   });
 
   // 1. Loading authentication (Guaranteed same on SSR and initial client hydration pass)
-  if (!mounted || authLoading || (loading && user?.role === 'super_admin')) {
+  if (!mounted || authLoading || (loading && isSuperAdmin)) {
     return (
       <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-2xl border-4 border-[#F26522] border-t-transparent animate-spin mb-4" />
@@ -443,7 +458,7 @@ export default function SuperAdminPage() {
   }
 
   // 3. Unauthorized state (Logged in, but not super_admin)
-  if (user.role !== 'super_admin') {
+  if (!isSuperAdmin) {
     return (
       <div className="min-h-screen bg-[#050D24] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md w-full bg-[#071333] border border-rose-500/50 rounded-3xl p-8 shadow-2xl space-y-6">
@@ -537,6 +552,46 @@ export default function SuperAdminPage() {
             {lang === 'bn' ? 'ওয়েবসাইট দেখুন' : 'Visit Site'}
           </Link>
         </div>
+      </div>
+
+      {/* Quick Admin Hub Navigation */}
+      <div className="max-w-7xl mx-auto flex items-center gap-2.5 flex-wrap p-3 rounded-2xl bg-[#08143A] border border-[#1d3575]">
+        <span className="text-xs font-black text-[#F9A01B] flex items-center gap-1.5 px-2">
+          <Sparkles className="w-3.5 h-3.5 text-[#F26522]" />
+          <span>{lang === 'bn' ? 'অ্যাডমিন শর্টকাট:' : 'Admin Hub:'}</span>
+        </span>
+
+        <Link
+          href="/admin/fixtures"
+          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0C1A40] hover:bg-[#112766] text-slate-200 border border-[#1d3575] hover:border-[#F26522] flex items-center gap-1.5 transition-colors"
+        >
+          <Swords className="w-3.5 h-3.5 text-[#F26522]" />
+          <span>{lang === 'bn' ? 'ম্যাচ ফিক্সচার ও লটারি ড্র' : 'Match Fixtures'}</span>
+        </Link>
+
+        <Link
+          href="/admin/checkin"
+          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0C1A40] hover:bg-[#112766] text-slate-200 border border-[#1d3575] hover:border-[#00A3E0] flex items-center gap-1.5 transition-colors"
+        >
+          <QrCode className="w-3.5 h-3.5 text-[#00A3E0]" />
+          <span>{lang === 'bn' ? 'মাঠের কিউআর চেক-ইন' : 'QR Check-in'}</span>
+        </Link>
+
+        <Link
+          href="/admin/events"
+          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0C1A40] hover:bg-[#112766] text-slate-200 border border-[#1d3575] hover:border-[#F26522] flex items-center gap-1.5 transition-colors"
+        >
+          <Calendar className="w-3.5 h-3.5 text-[#F26522]" />
+          <span>{lang === 'bn' ? 'অনুষ্ঠান ব্যবস্থাপনা' : 'Events'}</span>
+        </Link>
+
+        <Link
+          href="/admin/registrations"
+          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0C1A40] hover:bg-[#112766] text-slate-200 border border-[#1d3575] hover:border-emerald-500 flex items-center gap-1.5 transition-colors"
+        >
+          <Users className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{lang === 'bn' ? 'দল নিবন্ধন পর্যালোচনা' : 'Registrations'}</span>
+        </Link>
       </div>
 
       <div className="max-w-7xl mx-auto space-y-8">
@@ -1055,27 +1110,34 @@ export default function SuperAdminPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#0C1A40] text-slate-400 font-bold uppercase">
                     <tr>
-                      <th className="p-3">{lang === 'bn' ? 'অ্যাডমিন / ভূমিকা' : 'Admin / Role'}</th>
+                      <th className="p-3 whitespace-nowrap">{lang === 'bn' ? 'অ্যাডমিন / ভূমিকা' : 'Admin / Role'}</th>
                       {ALL_PERMISSIONS.map((perm) => (
-                        <th key={perm.key} className="p-2 text-center whitespace-nowrap">
-                          {perm.key.split('.')[0]}
+                        <th
+                          key={perm.key}
+                          className="p-2 text-center whitespace-nowrap text-[10px] font-black tracking-wider text-slate-300"
+                          title={lang === 'bn' ? perm.labelBn : perm.labelEn}
+                        >
+                          {lang === 'bn' ? perm.shortBn : perm.shortEn}
                         </th>
                       ))}
-                      <th className="p-3 text-center">{lang === 'bn' ? 'সক্রিয়' : 'Active'}</th>
-                      <th className="p-3 text-right">{lang === 'bn' ? 'পদক্ষেপ' : 'Actions'}</th>
+                      <th className="p-3 text-center whitespace-nowrap">{lang === 'bn' ? 'সক্রিয়' : 'Active'}</th>
+                      <th className="p-3 text-right whitespace-nowrap">{lang === 'bn' ? 'পদক্ষেপ' : 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1d3575]/50">
                     {admins.map((adm) => {
-                      const isRoot = adm.role === 'super_admin';
+                      const isRoot = adm.role === 'super_admin' || adm.email?.toLowerCase().trim() === 'skahidulla568@gmail.com';
                       return (
-                        <tr key={adm.id} className="hover:bg-[#0C1A40]/40">
+                        <tr key={adm.id} className="hover:bg-[#0C1A40]/40 transition-colors">
                           <td className="p-3">
-                            <p className="font-bold text-white">{adm.name || adm.email}</p>
+                            <p className="font-bold text-white flex items-center gap-1.5">
+                              <span>{adm.name || adm.email}</span>
+                              {isRoot && <Crown className="w-3.5 h-3.5 text-[#F9A01B] shrink-0" />}
+                            </p>
                             <p className="font-mono text-[10px] text-slate-400">{adm.email}</p>
                             <span
-                              className={`inline-block mt-0.5 px-2 py-0.2 rounded text-[9px] font-bold uppercase ${
-                                isRoot ? 'bg-[#F26522] text-white' : 'bg-[#19398A] text-white'
+                              className={`inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                isRoot ? 'bg-[#F26522] text-white shadow-xs' : 'bg-[#19398A] text-white'
                               }`}
                             >
                               {adm.role}
@@ -1086,55 +1148,69 @@ export default function SuperAdminPage() {
                             const hasPerm = isRoot || adm.permissions.includes(perm.key);
                             return (
                               <td key={perm.key} className="p-2 text-center">
-                                <button
-                                  disabled={isRoot || actionLoading === `perm_${adm.id}_${perm.key}`}
-                                  onClick={() => handleTogglePermission(adm, perm.key)}
-                                  className={`p-1 rounded transition-colors ${
-                                    isRoot
-                                      ? 'text-[#F9A01B] opacity-60 cursor-not-allowed'
-                                      : hasPerm
-                                      ? 'text-emerald-400 hover:text-emerald-300'
-                                      : 'text-slate-600 hover:text-slate-400'
-                                  }`}
-                                  title={lang === 'bn' ? perm.labelBn : perm.labelEn}
-                                >
-                                  {actionLoading === `perm_${adm.id}_${perm.key}` ? (
-                                    <Loader2 className="w-4 h-4 animate-spin text-[#F9A01B] mx-auto" />
-                                  ) : hasPerm ? (
-                                    <CheckSquare className="w-4 h-4" />
-                                  ) : (
-                                    <Square className="w-4 h-4" />
-                                  )}
-                                </button>
+                                {isRoot ? (
+                                  <span title={lang === 'bn' ? 'সুপার অ্যাডমিনের সমস্ত অনুমতি স্থায়ীভাবে সক্রিয়' : 'Super Admin has permanent full access'}>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-400 mx-auto" />
+                                  </span>
+                                ) : (
+                                  <button
+                                    disabled={actionLoading === `perm_${adm.id}_${perm.key}`}
+                                    onClick={() => handleTogglePermission(adm, perm.key)}
+                                    className={`p-1 rounded transition-colors ${
+                                      hasPerm
+                                        ? 'text-emerald-400 hover:text-emerald-300'
+                                        : 'text-slate-600 hover:text-slate-400'
+                                    }`}
+                                    title={lang === 'bn' ? perm.labelBn : perm.labelEn}
+                                  >
+                                    {actionLoading === `perm_${adm.id}_${perm.key}` ? (
+                                      <Loader2 className="w-4 h-4 animate-spin text-[#F9A01B] mx-auto" />
+                                    ) : hasPerm ? (
+                                      <CheckSquare className="w-4 h-4" />
+                                    ) : (
+                                      <Square className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
                               </td>
                             );
                           })}
 
                           <td className="p-3 text-center">
-                            <button
-                              disabled={isRoot || actionLoading === `active_${adm.id}`}
-                              onClick={() => handleToggleActive(adm)}
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                adm.active
-                                  ? 'bg-emerald-950 text-emerald-400'
-                                  : 'bg-rose-950 text-rose-400'
-                              }`}
-                            >
-                              {actionLoading === `active_${adm.id}` ? (
-                                <Loader2 className="w-3 h-3 animate-spin mx-auto" />
-                              ) : adm.active ? (
-                                lang === 'bn' ? 'সক্রিয়' : 'Active'
-                              ) : (
-                                lang === 'bn' ? 'নিষ্ক্রিয়' : 'Disabled'
-                              )}
-                            </button>
+                            {isRoot ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
+                                {lang === 'bn' ? 'স্থায়ী সক্রিয়' : 'ROOT ACTIVE'}
+                              </span>
+                            ) : (
+                              <button
+                                disabled={actionLoading === `active_${adm.id}`}
+                                onClick={() => handleToggleActive(adm)}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
+                                  adm.active
+                                    ? 'bg-emerald-950 text-emerald-400 hover:bg-emerald-900/60'
+                                    : 'bg-rose-950 text-rose-400 hover:bg-rose-900/60'
+                                }`}
+                              >
+                                {actionLoading === `active_${adm.id}` ? (
+                                  <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                                ) : adm.active ? (
+                                  lang === 'bn' ? 'সক্রিয়' : 'Active'
+                                ) : (
+                                  lang === 'bn' ? 'নিষ্ক্রিয়' : 'Disabled'
+                                )}
+                              </button>
+                            )}
                           </td>
 
                           <td className="p-3 text-right">
-                            {!isRoot && (
+                            {isRoot ? (
+                              <span className="text-[10px] text-slate-500 font-bold px-2 py-1 whitespace-nowrap">
+                                {lang === 'bn' ? 'রুট অ্যাকাউন্ট' : 'Root'}
+                              </span>
+                            ) : (
                               <button
                                 onClick={() => setDeleteTarget(adm.email)}
-                                className="p-1.5 text-rose-400 hover:bg-rose-950/60 rounded"
+                                className="p-1.5 text-rose-400 hover:bg-rose-950/60 rounded transition-colors"
                                 title={lang === 'bn' ? 'মুছুন' : 'Delete'}
                               >
                                 <Trash2 className="w-4 h-4" />

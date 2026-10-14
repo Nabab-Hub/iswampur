@@ -876,14 +876,6 @@ export default function MatchdayCheckinPage() {
                           {pass.memberCount} {lang === 'bn' ? 'জন খেলোয়াড়' : 'players'}
                         </p>
                       </div>
-
-                      <button
-                        onClick={() => executeCheckin(pass.humanPassCode)}
-                        disabled={checking}
-                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 shadow-md transition-all hover:scale-105 shrink-0"
-                      >
-                        {lang === 'bn' ? 'প্রবেশ নিশ্চিত করুন' : 'Confirm Entry'}
-                      </button>
                     </div>
                   ))
                 )

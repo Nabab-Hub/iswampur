@@ -10,6 +10,9 @@ import AboutPreview from '@/components/home/AboutPreview';
 import LiveBracketSection from '@/components/tournament/LiveBracketSection';
 import { repository } from '@/lib/db/repository';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   const events = await repository.getEvents(true);
   const posts = await repository.getPosts(true);
@@ -32,6 +35,8 @@ export default async function HomePage() {
     ? await repository.getTournamentBracket(cricketEvent.id)
     : null;
 
+  const showFixturesOnPublic = initialBracket ? initialBracket.showOnPublicPages !== false : true;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f4fa] dark:bg-[#050d24] transition-colors">
       <Navbar />
@@ -40,7 +45,7 @@ export default async function HomePage() {
         <HeroSection featuredEvent={heroEvent} />
 
         {/* Live Cricket Tournament Fixtures & Multi-Stage Knockout Bracket */}
-        {cricketEvent && (
+        {cricketEvent && showFixturesOnPublic && (
           <section className="py-6 sm:py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <LiveBracketSection
               eventId={cricketEvent.id}

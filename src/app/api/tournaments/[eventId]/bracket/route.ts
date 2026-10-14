@@ -106,12 +106,52 @@ export async function POST(
   }
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  try {
+    const { eventId } = await params;
+    const bracket = await repository.getTournamentBracket(eventId);
+    if (!bracket) {
+      return NextResponse.json({ error: 'Bracket not found' }, { status: 404 });
+    }
+    const body = await req.json();
+    if (body.showOnPublicPages !== undefined) {
+      bracket.showOnPublicPages = Boolean(body.showOnPublicPages);
+    }
+    if (body.standings) {
+      bracket.standings = { ...bracket.standings, ...body.standings };
+    }
+    const saved = await repository.saveTournamentBracket(bracket);
+    return NextResponse.json(saved);
+  } catch (error) {
+    console.error('Failed to patch tournament bracket:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { eventId } = await params;
+    const { searchParams } = new URL(req.url);
+    const actorEmail = (req.headers.get('x-user-email') || searchParams.get('actorEmail') || '').toLowerCase();
+    const actorRole = req.headers.get('x-user-role') || searchParams.get('actorRole') || '';
+
+    const isSuperAdmin =
+      actorEmail === 'skahidulla568@gmail.com' ||
+      actorRole === 'super_admin';
+
+    if (!isSuperAdmin) {
+      return NextResponse.json(
+        { error: 'শুধুমাত্র সুপার অ্যাডমিন (skahidulla568@gmail.com) টুর্নামেন্ট ড্র রিসেট করতে পারবেন।' },
+        { status: 403 }
+      );
+    }
+
     await repository.deleteTournamentBracket(eventId);
     return NextResponse.json({ success: true, message: 'Tournament bracket reset successfully' });
   } catch (error) {

@@ -1251,12 +1251,23 @@ export const repository = {
   },
 
   async deleteTournamentBracket(eventId: string): Promise<boolean> {
-    globalStore.brackets = globalStore.brackets.filter((b) => b.eventId !== eventId);
+    const relatedIds = Array.from(
+      new Set([
+        eventId,
+        eventId.replace(/^event-/, ''),
+        `event-${eventId}`,
+        eventId === 'event-ipl-2026' || eventId === 'iswampur-premier-league-2026' ? 'event-ipl-2026' : eventId,
+        eventId === 'event-ipl-2026' || eventId === 'iswampur-premier-league-2026' ? 'iswampur-premier-league-2026' : eventId,
+      ])
+    );
+    globalStore.brackets = globalStore.brackets.filter((b) => !relatedIds.includes(b.eventId));
     if (db) {
-      try {
-        await deleteDoc(doc(db, 'brackets', eventId));
-      } catch (err) {
-        console.warn('Firestore deleteTournamentBracket error:', err);
+      for (const id of relatedIds) {
+        try {
+          await deleteDoc(doc(db, 'brackets', id));
+        } catch (err) {
+          // ignore doc not found
+        }
       }
     }
     return true;

@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { firePartyPopper, fireChampionshipGrandBurst } from '@/lib/confetti';
 
 // Audio synthesizer for suspense reel tick and victory chime using Web Audio API
 function playSoundEffect(type: 'tick' | 'reveal' | 'chime') {
@@ -191,6 +192,13 @@ export default function AdminFixturesPage() {
   // Reset confirmation modal state
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+
+  // Check if current user is Super Admin (skahidulla568@gmail.com or super_admin role)
+  const isSuperAdmin = useMemo(() => {
+    const email = user?.email?.toLowerCase().trim();
+    return email === 'skahidulla568@gmail.com' || user?.role === 'super_admin';
+  }, [user]);
 
   // Score editor state
   const [editingScoreMatchId, setEditingScoreMatchId] = useState<string | null>(null);
@@ -444,6 +452,7 @@ export default function AdminFixturesPage() {
         rounds: updatedRounds,
         activeRoundNumber: roundNum,
         isComplete: false,
+        showOnPublicPages: bracket?.showOnPublicPages ?? true,
         createdAt: bracket?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -469,7 +478,7 @@ export default function AdminFixturesPage() {
     }
   };
 
-  // 5. Declare Match Winner
+  // 5. Declare Match Winner (Triggers Party Popper / Confetti Blast)
   const handleDeclareWinner = async () => {
     if (!confirmWinnerData) return;
     setIsDeclaringWinner(true);
@@ -489,10 +498,23 @@ export default function AdminFixturesPage() {
       const updatedBracket = await res.json();
       setBracket(updatedBracket);
       playSoundEffect('chime');
+
+      // Blast party paper / confetti!
+      const isGrandFinale =
+        Boolean(updatedBracket.isComplete) ||
+        match.roundName?.en?.toLowerCase().includes('final') ||
+        match.roundName?.bn?.includes('ফাইনাল');
+
+      if (isGrandFinale) {
+        fireChampionshipGrandBurst();
+      } else {
+        firePartyPopper();
+      }
+
       toast.success(
         lang === 'bn'
-          ? `অভিনন্দন! ${winnerTeam.name} ম্যাচ জয়ী হিসেবে চিহ্নিত হয়েছে`
-          : `Congratulations! ${winnerTeam.name} marked as match winner`
+          ? `🎉 অভিনন্দন! ${winnerTeam.name} ম্যাচ জয়ী হিসেবে চিহ্নিত হয়েছে`
+          : `🎉 Congratulations! ${winnerTeam.name} marked as match winner`
       );
       setConfirmWinnerData(null);
     } catch (err: any) {
@@ -526,17 +548,67 @@ export default function AdminFixturesPage() {
     }
   };
 
-  // 7. Reset Bracket
+  // 7. Toggle Public Visibility of Live Fixtures & Winners (Home & IPL pages)
+  const handleTogglePublicVisibility = async (checked: boolean) => {
+    if (!bracket || !selectedEventId) return;
+    setIsUpdatingVisibility(true);
+    try {
+      const res = await fetch(`/api/tournaments/${selectedEventId}/bracket`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showOnPublicPages: checked }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setBracket(updated);
+        toast.success(
+          checked
+            ? (lang === 'bn' ? 'ফিক্সচার ও বিজয়ী হোম এবং আইপিএল পেজে প্রদর্শিত হবে' : 'Fixtures & winners are now visible on Home & IPL')
+            : (lang === 'bn' ? 'ফিক্সচার ও বিজয়ী হোম এবং আইপিএল পেজ থেকে লুকানো হয়েছে' : 'Fixtures & winners hidden from Home & IPL')
+        );
+      } else {
+        toast.error('Failed to update public visibility');
+      }
+    } catch {
+      toast.error('Error updating public visibility');
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
+  // 8. Reset Bracket (Exclusively restricted to Super Admin)
   const handleResetBracket = async () => {
+    if (!isSuperAdmin) {
+      toast.error(
+        lang === 'bn'
+          ? 'শুধুমাত্র সুপার অ্যাডমিন (skahidulla568@gmail.com) টুর্নামেন্ট ড্র রিসেট করতে পারবেন।'
+          : 'Only Super Admin (skahidulla568@gmail.com) can reset tournament bracket.'
+      );
+      setIsResetConfirmOpen(false);
+      return;
+    }
+
     setIsResetting(true);
     try {
       const res = await fetch(`/api/tournaments/${selectedEventId}/bracket`, {
         method: 'DELETE',
+        headers: {
+          'x-user-email': user?.email || '',
+          'x-user-role': user?.role || '',
+        },
       });
+
       if (res.ok) {
         setBracket(null);
-        toast.success(lang === 'bn' ? 'টুর্নামেন্ট ড্র রিসেট করা হয়েছে' : 'Tournament bracket reset');
+        toast.success(
+          lang === 'bn'
+            ? 'টুর্নামেন্ট ড্র ও সমস্ত ফিক্সচার সফলভাবে রিসেট করা হয়েছে'
+            : 'Tournament bracket has been completely reset'
+        );
         setIsResetConfirmOpen(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || 'Failed to reset tournament bracket');
       }
     } catch (err) {
       toast.error('Failed to reset tournament bracket');
@@ -566,8 +638,23 @@ export default function AdminFixturesPage() {
             </p>
           </div>
 
-          {/* Select Active Cricket Match Filter */}
-          <div className="flex items-center gap-3">
+          {/* Select Active Cricket Match Filter & Actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {bracket && (
+              <label className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={bracket.showOnPublicPages !== false}
+                  disabled={isUpdatingVisibility}
+                  onChange={(e) => handleTogglePublicVisibility(e.target.checked)}
+                  className="w-4 h-4 rounded cursor-pointer accent-[#F26522]"
+                />
+                <span className={`text-xs font-bold ${bracket.showOnPublicPages !== false ? 'text-[#19398A] dark:text-[#00A3E0]' : 'text-slate-400'}`}>
+                  {lang === 'bn' ? 'হোম ও আইপিএল পেজে ফিক্সচার দেখান' : 'Show on Home & IPL'}
+                </span>
+              </label>
+            )}
+
             <div className="flex items-center gap-2 bg-white dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] px-3.5 py-2 rounded-2xl shadow-xs">
               <Trophy className="w-4 h-4 text-[#F9A01B] shrink-0" />
               <div className="text-left">
@@ -591,13 +678,14 @@ export default function AdminFixturesPage() {
               </div>
             </div>
 
-            {bracket && (
+            {bracket && isSuperAdmin && (
               <button
                 onClick={() => setIsResetConfirmOpen(true)}
-                className="p-2.5 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer"
-                title={lang === 'bn' ? 'সম্পূর্ণ ড্র রিসেট করুন' : 'Reset Tournament Bracket'}
+                className="px-3.5 py-2 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-black shadow-xs"
+                title={lang === 'bn' ? 'সম্পূর্ণ ড্র রিসেট করুন (শুধুমাত্র সুপার অ্যাডমিন)' : 'Reset Tournament Bracket (Super Admin Only)'}
               >
                 <RotateCcw className="w-4 h-4" />
+                <span className="hidden sm:inline">{lang === 'bn' ? 'ড্র রিসেট' : 'Reset Bracket'}</span>
               </button>
             )}
           </div>
@@ -921,10 +1009,13 @@ export default function AdminFixturesPage() {
                               {/* Declare Team A Won Button */}
                               {!isMatchCompleted && !isBye && (
                                 <button
-                                  onClick={() => setConfirmWinnerData({ match, winnerTeam: match.teamA })}
+                                  onClick={() => {
+                                    firePartyPopper();
+                                    setConfirmWinnerData({ match, winnerTeam: match.teamA });
+                                  }}
                                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
-                                  {lang === 'bn' ? 'জয়ী (Won)' : 'Declare Winner'}
+                                  {lang === 'bn' ? '🎉 জয়ী (Won)' : '🎉 Declare Winner'}
                                 </button>
                               )}
                             </div>
@@ -973,10 +1064,13 @@ export default function AdminFixturesPage() {
                                 {/* Declare Team B Won Button */}
                                 {!isMatchCompleted && !isBye && (
                                   <button
-                                    onClick={() => setConfirmWinnerData({ match, winnerTeam: match.teamB! })}
+                                    onClick={() => {
+                                      firePartyPopper();
+                                      setConfirmWinnerData({ match, winnerTeam: match.teamB! });
+                                    }}
                                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs cursor-pointer active:scale-95 transition-all"
                                   >
-                                    {lang === 'bn' ? 'জয়ী (Won)' : 'Declare Winner'}
+                                    {lang === 'bn' ? '🎉 জয়ী (Won)' : '🎉 Declare Winner'}
                                   </button>
                                 )}
                               </div>

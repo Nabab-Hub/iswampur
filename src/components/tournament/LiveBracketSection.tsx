@@ -35,14 +35,15 @@ export default function LiveBracketSection({
   useEffect(() => {
     async function loadBracket() {
       try {
-        const res = await fetch(`/api/tournaments/${eventId}/bracket`);
+        const res = await fetch(`/api/tournaments/${eventId}/bracket`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (data.bracket) {
-            setBracket(data.bracket);
-            // Default to active round
-            setActiveRoundTab(data.bracket.activeRoundNumber || 1);
+          setBracket(data.bracket || null);
+          if (data.bracket?.activeRoundNumber) {
+            setActiveRoundTab(data.bracket.activeRoundNumber);
           }
+        } else {
+          setBracket(null);
         }
       } catch (err) {
         console.error('Failed to load public bracket:', err);
@@ -53,6 +54,11 @@ export default function LiveBracketSection({
 
     loadBracket();
   }, [eventId]);
+
+  // If admin toggled off public visibility, hide this section
+  if (bracket && bracket.showOnPublicPages === false) {
+    return null;
+  }
 
   if (loading) {
     return (
