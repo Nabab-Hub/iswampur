@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/authContext';
 import { useLanguage } from '@/lib/i18n/context';
 import {
@@ -51,12 +51,19 @@ function GoogleIcon() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeTabParam = searchParams?.get('tab');
+  const [activeTabParam, setActiveTabParam] = useState<string | null>(null);
   const { user, loading, hasPermission, signInWithGoogle, signOut } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setActiveTabParam(urlParams.get('tab'));
+    }
+  }, [pathname]);
 
   const checkIsActive = (href: string) => {
     if (href === '/admin/posts?tab=posts') {
@@ -67,10 +74,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     return pathname === href;
   };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const userEmail = user?.email?.toLowerCase().trim();
   const isSuperAdmin = user?.role === 'super_admin' || userEmail === 'skahidulla568@gmail.com';
@@ -295,6 +298,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => {
+                    if (item.href.includes('tab=')) {
+                      const tabVal = item.href.split('tab=')[1]?.split('&')[0] || null;
+                      setActiveTabParam(tabVal);
+                    } else {
+                      setActiveTabParam(null);
+                    }
+                  }}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                     isActive
                       ? 'bg-[#19398A] text-white shadow-sm'
@@ -483,7 +494,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (item.href.includes('tab=')) {
+                        const tabVal = item.href.split('tab=')[1]?.split('&')[0] || null;
+                        setActiveTabParam(tabVal);
+                      } else {
+                        setActiveTabParam(null);
+                      }
+                    }}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                       isActive
                         ? 'bg-[#19398A] text-white shadow-sm'
