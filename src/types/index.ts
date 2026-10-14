@@ -313,3 +313,60 @@ export interface ContactMessage {
   status: 'unread' | 'read' | 'replied';
   createdAt: string;
 }
+
+// Tournament Draw & Fixture Bracket Models
+export interface TournamentMatchTeam {
+  id: string; // team/registration id or passId
+  name: string;
+  representativeName?: string;
+  phone?: string;
+  score?: string; // e.g. "145/6 (10 ov)"
+  isBye?: boolean;
+}
+
+export interface TournamentMatch {
+  id: string; // e.g. match_1_1
+  matchNumber: number; // Global match sequence (e.g. 1, 2, 3...)
+  roundNumber: number; // 1 = Round 1 / Qualifiers, 2 = Quarter-finals, 3 = Semi-finals, 4 = Final, 5 = 3rd Place Match
+  roundName: BilingualText;
+  teamA: TournamentMatchTeam;
+  teamB?: TournamentMatchTeam | null; // null if teamA receives a BYE
+  winnerId?: string;
+  winnerName?: string;
+  loserId?: string;
+  loserName?: string;
+  status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'BYE_ADVANCED';
+  date?: string;
+  time?: string;
+  venue?: BilingualText;
+  notes?: string;
+}
+
+export interface TournamentRound {
+  roundNumber: number;
+  roundName: BilingualText;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  matches: TournamentMatch[];
+}
+
+export interface TournamentStandings {
+  champion?: { id: string; name: string };
+  runnerUp?: { id: string; name: string };
+  thirdPlace?: { id: string; name: string };
+  fourthPlace?: { id: string; name: string };
+  semifinalists?: Array<{ id: string; name: string }>;
+  participants?: Array<{ id: string; name: string }>;
+}
+
+export interface TournamentBracketData {
+  eventId: string;
+  eventTitle: BilingualText;
+  totalTeams: number;
+  rounds: TournamentRound[];
+  standings?: TournamentStandings;
+  activeRoundNumber: number;
+  isComplete: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+

@@ -23,6 +23,7 @@ import {
   Menu,
   X,
   ShieldAlert,
+  Swords,
 } from 'lucide-react';
 
 function GoogleIcon() {
@@ -209,6 +210,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       label: lang === 'bn' ? 'মাঠের কিউআর চেক-ইন' : 'Matchday QR Check-in',
       icon: QrCode,
       show: hasPermission('matchday.checkin'),
+    },
+    {
+      href: '/admin/fixtures',
+      label: lang === 'bn' ? 'ম্যাচ ফিক্সচার ও লটারি ড্র' : 'Match Fixtures & Live Draw',
+      icon: Swords,
+      show: hasPermission('ipl.manage') || hasPermission('matchday.checkin') || isAdmin,
     },
 
     {

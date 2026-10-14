@@ -10,6 +10,7 @@ import {
   TeamContactInfo,
   TeamPass,
   TeamRegistration,
+  TournamentBracketData,
   UserRole,
   VillageEvent,
 } from '@/types';
@@ -365,6 +366,7 @@ class DataStore {
   auditLogs: AuditLogEntry[] = [];
   contactMessages: ContactMessage[] = [];
   users: AppDirectoryUser[] = [];
+  brackets: TournamentBracketData[] = [];
 
   constructor() {
     // Initial seeded users
@@ -626,7 +628,15 @@ export const repository = {
           console.warn('Firestore delete post cascade error:', err);
         }
       }
+
+      try {
+        await deleteDoc(doc(db, 'brackets', targetId));
+      } catch (err) {
+        console.warn('Firestore delete bracket cascade error:', err);
+      }
     }
+
+    globalStore.brackets = globalStore.brackets.filter((b) => b.eventId !== targetId && b.eventId !== targetSlug);
 
     return true;
   },
@@ -1200,4 +1210,57 @@ export const repository = {
       submittedAt: r.createdAt,
     }));
   },
+
+  // Tournament Fixtures & Live Bracket Draw
+  async getTournamentBracket(eventId: string): Promise<TournamentBracketData | null> {
+    if (db) {
+      try {
+        const snap = await getDoc(doc(db, 'brackets', eventId));
+        if (snap.exists()) {
+          const data = snap.data() as TournamentBracketData;
+          const idx = globalStore.brackets.findIndex((b) => b.eventId === eventId);
+          if (idx >= 0) globalStore.brackets[idx] = data;
+          else globalStore.brackets.push(data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Firestore getTournamentBracket error:', err);
+      }
+    }
+    return globalStore.brackets.find((b) => b.eventId === eventId) || null;
+  },
+
+  async saveTournamentBracket(bracket: TournamentBracketData): Promise<TournamentBracketData> {
+    bracket.updatedAt = new Date().toISOString();
+    const idx = globalStore.brackets.findIndex((b) => b.eventId === bracket.eventId);
+    if (idx >= 0) {
+      globalStore.brackets[idx] = bracket;
+    } else {
+      globalStore.brackets.push(bracket);
+    }
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'brackets', bracket.eventId), cleanForFirestore(bracket));
+      } catch (err) {
+        console.warn('Firestore saveTournamentBracket error:', err);
+      }
+    }
+
+    return bracket;
+  },
+
+  async deleteTournamentBracket(eventId: string): Promise<boolean> {
+    globalStore.brackets = globalStore.brackets.filter((b) => b.eventId !== eventId);
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'brackets', eventId));
+      } catch (err) {
+        console.warn('Firestore deleteTournamentBracket error:', err);
+      }
+    }
+    return true;
+  },
 };
+// Exported Repository Singleton
+

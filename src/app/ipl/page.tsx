@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/lib/i18n/context';
 import { IPLSeason, TeamRegistration } from '@/types';
 import { Trophy, FileText, Users, ArrowRight, Calendar, MapPin, CheckCircle2, Flame, ShieldCheck, Sparkles } from 'lucide-react';
+import LiveBracketSection from '@/components/tournament/LiveBracketSection';
 
 export default function IPLHomePage() {
   const { lang, t, resolveBilingual } = useLanguage();
@@ -163,6 +164,11 @@ export default function IPLHomePage() {
                 {lang === 'bn' ? 'ঈশ্বমপুর পঞ্চায়েত এলাকা' : 'Iswampur Area'}
               </p>
             </div>
+          </div>
+
+          {/* Live Tournament Bracket & Fixtures */}
+          <div id="fixtures" className="scroll-mt-24">
+            <LiveBracketSection eventId="iswampur-premier-league-2026" />
           </div>
 
           {/* Rules Preview Box */}

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n/context';
-import { Trophy, ShieldCheck, Flame, ArrowRight, FileText, CheckCircle, Users } from 'lucide-react';
+import { Trophy, ShieldCheck, Flame, ArrowRight, FileText, CheckCircle, Users, Swords } from 'lucide-react';
 
 export default function IPLPromoBanner() {
   const { lang, t } = useLanguage();
@@ -73,10 +73,18 @@ export default function IPLPromoBanner() {
 
                 <Link
                   href="/ipl/teams"
-                  className="px-5 py-3.5 rounded-xl font-bold text-white bg-[#0B1A42] hover:bg-[#112766] border border-[#1D3D8F] transition-all flex items-center gap-2 text-sm sm:text-base"
+                  className="px-5 py-3.5 rounded-xl font-bold text-white bg-[#0B1A42] hover:bg-[#112766] border border-[#1D3D8F] transition-all flex items-center gap-2 text-sm sm:text-base cursor-pointer"
                 >
                   <Users className="w-4 h-4 text-[#00A3E0]" />
                   <span>{t.ipl.teamsTab}</span>
+                </Link>
+
+                <Link
+                  href="/ipl#fixtures"
+                  className="px-5 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#19398A] to-[#1e4bb8] hover:brightness-110 border border-[#F9A01B]/40 transition-all flex items-center gap-2 text-sm sm:text-base cursor-pointer shadow-md"
+                >
+                  <Swords className="w-4 h-4 text-[#F9A01B]" />
+                  <span>{lang === 'bn' ? 'লাইভ ফিক্সচার ও ড্র' : 'Live Fixtures & Draw'}</span>
                 </Link>
               </div>
             </div>
