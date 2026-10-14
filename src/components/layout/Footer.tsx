@@ -109,6 +109,22 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/terms"
+                  className="text-[#273656] dark:text-[#CBD5E1] hover:text-[#19398A] dark:hover:text-[#00A3E0] transition-colors"
+                >
+                  {lang === 'bn' ? 'শর্তাবলী ও নিয়মাবলী' : 'Terms & Conditions'}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-[#273656] dark:text-[#CBD5E1] hover:text-[#19398A] dark:hover:text-[#00A3E0] transition-colors"
+                >
+                  {lang === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/about"
                   className="text-[#273656] dark:text-[#CBD5E1] hover:text-[#19398A] dark:hover:text-[#00A3E0] transition-colors"
                 >
@@ -145,7 +161,17 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-[#cbd9ec] dark:border-[#1d3575] mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
-          <p>© {lang === 'bn' ? '২০২৬' : new Date().getFullYear()} {t.footer.rights}</p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <p>© {lang === 'bn' ? '২০২৬' : new Date().getFullYear()} {t.footer.rights}</p>
+            <span className="hidden sm:inline">•</span>
+            <Link href="/terms" className="hover:text-[#F26522] transition-colors">
+              {lang === 'bn' ? 'শর্তাবলী' : 'Terms'}
+            </Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-[#F26522] transition-colors">
+              {lang === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}
+            </Link>
+          </div>
           <div className="flex items-center gap-1.5">
             <span>Official Digital Platform of</span>
             <span className="text-[#F26522] font-black">{lang === 'bn' ? 'ঈশ্বমপুর গ্রাম কমিটি' : 'Iswampur Gram Committee'}</span>
