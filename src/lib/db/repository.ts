@@ -22,6 +22,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
 import { extractPassIdOrCode } from '@/lib/pass/utils';
@@ -1106,19 +1107,56 @@ export const repository = {
   },
 
   async getContactMessages(): Promise<ContactMessage[]> {
+    let items = globalStore.contactMessages;
     if (db) {
       try {
         const snap = await getDocs(collection(db, 'contactMessages'));
         if (!snap.empty) {
-          const items = snap.docs.map((d) => d.data() as ContactMessage);
+          items = snap.docs.map((d) => d.data() as ContactMessage);
           globalStore.contactMessages = items;
-          return items;
         }
       } catch (err) {
         console.warn('Firestore getContactMessages error:', err);
       }
     }
-    return globalStore.contactMessages;
+    return [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async updateContactMessage(id: string, updates: Partial<ContactMessage>): Promise<ContactMessage | null> {
+    const idx = globalStore.contactMessages.findIndex((m) => m.id === id);
+    let updated: ContactMessage | null = null;
+    if (idx !== -1) {
+      globalStore.contactMessages[idx] = { ...globalStore.contactMessages[idx], ...updates };
+      updated = globalStore.contactMessages[idx];
+    } else {
+      updated = { id, ...updates } as ContactMessage;
+    }
+
+    if (db && updated) {
+      try {
+        await updateDoc(doc(db, 'contactMessages', id), cleanForFirestore(updates));
+      } catch (err) {
+        console.warn('Firestore updateContactMessage error, trying setDoc merge:', err);
+        try {
+          await setDoc(doc(db, 'contactMessages', id), cleanForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.error('Firestore setDoc merge error:', e);
+        }
+      }
+    }
+    return updated;
+  },
+
+  async deleteContactMessage(id: string): Promise<boolean> {
+    globalStore.contactMessages = globalStore.contactMessages.filter((m) => m.id !== id);
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'contactMessages', id));
+      } catch (err) {
+        console.warn('Firestore deleteContactMessage error:', err);
+      }
+    }
+    return true;
   },
 
   // Users Directory (Track all logged-in users)

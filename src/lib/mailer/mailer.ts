@@ -533,3 +533,99 @@ export async function sendReviewStatusUpdateEmail(
 
   return sendEmail({ to: recipients, subject, html });
 }
+
+export async function sendContactReplyEmail(options: {
+  to: string;
+  recipientName: string;
+  originalMessage: string;
+  replyMessage: string;
+  adminName?: string;
+}): Promise<boolean> {
+  const { to, recipientName, originalMessage, replyMessage, adminName } = options;
+  const siteUrl = getPublicSiteUrl();
+  const subject = `Re: আপনার বার্তার উত্তর (Response to your inquiry) - ঈশ্বমপুর গ্রাম কমিটি`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="bn">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+    </head>
+    <body style="margin: 0; padding: 24px 0; background-color: #050D24; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #071333; border: 1px solid #1D3575; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <!-- Top Accent Strip -->
+        <tr>
+          <td style="height: 4px; background: linear-gradient(90deg, #F26522, #F9A01B, #19398A);"></td>
+        </tr>
+
+        <!-- Header -->
+        <tr>
+          <td style="padding: 28px 24px 20px 24px; text-align: center; border-bottom: 1px solid #1D3575;">
+            <h1 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 900; letter-spacing: -0.5px;">
+              ঈশ্বমপুর গ্রাম কমিটি ও আইপিএল পোর্টাল
+            </h1>
+            <p style="margin: 4px 0 0 0; color: #F9A01B; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+              Official Helpdesk & Communication
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td style="padding: 28px 24px;">
+            <p style="margin: 0 0 16px 0; color: #FFFFFF; font-size: 15px; font-weight: 700;">
+              নমস্কার ${recipientName},
+            </p>
+            <p style="margin: 0 0 20px 0; color: #CBD5E1; font-size: 13.5px; line-height: 1.6;">
+              ঈশ্বমপুর গ্রাম পোর্টালের যোগাযোগ ফর্মের মাধ্যমে পাঠানো আপনার বার্তার উত্তর নিচে প্রদান করা হলো:
+            </p>
+
+            <!-- Admin Reply Box -->
+            <div style="background-color: #0C1A40; border-left: 4px solid #10B981; border-radius: 8px; padding: 16px 18px; margin-bottom: 24px;">
+              <p style="margin: 0 0 8px 0; color: #10B981; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                💬 অ্যাডমিন উত্তর (Official Response):
+              </p>
+              <div style="color: #FFFFFF; font-size: 14px; line-height: 1.6; white-space: pre-wrap; font-weight: 500;">${replyMessage}</div>
+              ${adminName ? `<p style="margin: 12px 0 0 0; color: #94A3B8; font-size: 11px; text-align: right; font-style: italic;">— ${adminName} (Village Committee Desk)</p>` : ''}
+            </div>
+
+            <!-- Original Inquiry Box -->
+            <div style="background-color: #08143A; border: 1px solid #1D3575; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px;">
+              <p style="margin: 0 0 6px 0; color: #94A3B8; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                আপনার মূল জিজ্ঞাসা (Your Original Message):
+              </p>
+              <p style="margin: 0; color: #94A3B8; font-size: 12.5px; line-height: 1.5; font-style: italic;">
+                "${originalMessage}"
+              </p>
+            </div>
+
+            <!-- Action Button -->
+            <table align="center" style="margin: 20px auto 10px auto;">
+              <tr>
+                <td style="background: linear-gradient(90deg, #F26522, #F9A01B); border-radius: 10px;">
+                  <a href="${siteUrl}" style="display: inline-block; padding: 12px 24px; color: #050D24; font-weight: 900; text-decoration: none; text-transform: uppercase; font-size: 12.5px; letter-spacing: 0.5px;">
+                    ঈশ্বমপুর পোর্টাল পরিদর্শন করুন →
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 18px 24px; text-align: center; font-size: 11px; color: #64748B; border-top: 1px solid #1D3575; background-color: #050D24;">
+            <p style="margin: 0; color: #94A3B8; font-weight: bold;">ঈশ্বমপুর গ্রাম কমিটি ও ক্রীড়া পরিষদ</p>
+            <p style="margin: 4px 0 0 0;">Iswampur Village, PO: Iswampur, West Bengal, India • contact@iswampur.org</p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({ to, subject, html });
+}
+

@@ -312,6 +312,9 @@ export interface ContactMessage {
   message: string;
   status: 'unread' | 'read' | 'replied';
   createdAt: string;
+  replyText?: string;
+  repliedAt?: string;
+  repliedBy?: string;
 }
 
 // Tournament Draw & Fixture Bracket Models

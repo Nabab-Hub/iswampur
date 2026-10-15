@@ -24,6 +24,7 @@ import {
   X,
   ShieldAlert,
   Swords,
+  Mail,
 } from 'lucide-react';
 
 function GoogleIcon() {
@@ -222,6 +223,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       show: hasPermission('ipl.manage') || hasPermission('matchday.checkin') || isAdmin,
     },
 
+    {
+      href: '/admin/messages',
+      label: lang === 'bn' ? 'যোগাযোগ বার্তা (Inbox)' : 'Contact Messages',
+      icon: Mail,
+      show: true,
+    },
     {
       href: '/admin/content',
       label: lang === 'bn' ? 'সাইট কন্টেন্ট ও পেমেন্ট' : 'Site Content & Payment QR',

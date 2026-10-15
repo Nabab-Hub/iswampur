@@ -55,40 +55,14 @@ export default function LiveBracketSection({
     loadBracket();
   }, [eventId]);
 
-  // If admin toggled off public visibility, hide this section
-  if (bracket && bracket.showOnPublicPages === false) {
+  // If loading, don't flash anything
+  if (loading) {
     return null;
   }
 
-  if (loading) {
-    return (
-      <div className="p-8 rounded-3xl bg-white dark:bg-[#0c1a40] border border-[#cbd9ec] dark:border-[#1d3575] text-center">
-        <div className="w-8 h-8 border-3 border-[#F26522] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-xs font-bold text-slate-400">
-          {lang === 'bn' ? 'লাইভ ফিক্সচার ও ড্র লোড হচ্ছে...' : 'Loading Live Fixtures & Bracket...'}
-        </p>
-      </div>
-    );
-  }
-
-  if (!bracket || bracket.rounds.length === 0) {
-    return (
-      <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#08143A] to-[#102766] border border-[#F9A01B]/40 text-white shadow-xl text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400">
-          <Swords className="w-7 h-7" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-xl font-black">
-            {lang === 'bn' ? 'ম্যাচডে লটারি ড্র শীঘ্রই শুরু হবে' : 'Matchday Lottery Draw Commencing Soon'}
-          </h3>
-          <p className="text-xs text-slate-300 max-w-md mx-auto">
-            {lang === 'bn'
-              ? 'মাঠে দলসমূহের আগমন ও কিউআর পাস ভেরিফিকেশন প্রক্রিয়া চলছে। ভেরিফিকেশন সম্পন্ন হলে স্বয়ংক্রিয় লটারি ড্র-এর মাধ্যমে লাইভ ফিক্সচার প্রকাশিত হবে।'
-              : 'Squad check-in and digital QR verification are underway at the central grounds. Live fixtures will be drawn right here.'}
-          </p>
-        </div>
-      </div>
-    );
+  // Only render if a tournament bracket exists, has rounds, and admin explicitly turned ON public visibility
+  if (!bracket || !bracket.rounds || bracket.rounds.length === 0 || !bracket.showOnPublicPages) {
+    return null;
   }
 
   const selectedRound = bracket.rounds.find((r) => r.roundNumber === activeRoundTab) || bracket.rounds[0];

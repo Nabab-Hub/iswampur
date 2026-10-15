@@ -4,7 +4,7 @@ import Footer from '@/components/layout/Footer';
 import HeroSection from '@/components/home/HeroSection';
 import AnnouncementsTicker from '@/components/home/AnnouncementsTicker';
 import FeaturedEvents from '@/components/home/FeaturedEvents';
-import IPLPromoBanner from '@/components/home/IPLPromoBanner';
+import ActiveEventsSpotlight from '@/components/home/ActiveEventsSpotlight';
 import VillageGalleryPreview from '@/components/home/VillageGalleryPreview';
 import AboutPreview from '@/components/home/AboutPreview';
 import LiveBracketSection from '@/components/tournament/LiveBracketSection';
@@ -35,7 +35,12 @@ export default async function HomePage() {
     ? await repository.getTournamentBracket(cricketEvent.id)
     : null;
 
-  const showFixturesOnPublic = initialBracket ? initialBracket.showOnPublicPages !== false : true;
+  const showFixturesOnPublic = Boolean(
+    initialBracket &&
+    initialBracket.rounds &&
+    initialBracket.rounds.length > 0 &&
+    initialBracket.showOnPublicPages === true
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f4fa] dark:bg-[#050d24] transition-colors">
@@ -54,8 +59,10 @@ export default async function HomePage() {
           </section>
         )}
 
+        {/* Dynamic Active Events Spotlight / Showcase for ALL active village events */}
+        <ActiveEventsSpotlight events={events} />
+
         <FeaturedEvents events={events} posts={posts} />
-        <IPLPromoBanner />
         <VillageGalleryPreview />
         <AboutPreview />
       </main>

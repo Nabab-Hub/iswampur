@@ -452,7 +452,7 @@ export default function AdminFixturesPage() {
         rounds: updatedRounds,
         activeRoundNumber: roundNum,
         isComplete: false,
-        showOnPublicPages: bracket?.showOnPublicPages ?? true,
+        showOnPublicPages: bracket?.showOnPublicPages ?? false,
         createdAt: bracket?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -662,16 +662,18 @@ export default function AdminFixturesPage() {
           {/* Select Active Cricket Match Filter & Actions */}
           <div className="flex items-center gap-3 flex-wrap">
             {bracket && (
-              <label className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs cursor-pointer select-none">
+              <label className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#071333] border border-[#cbd9ec] dark:border-[#1d3575] shadow-xs cursor-pointer select-none transition-colors hover:border-[#F26522]">
                 <input
                   type="checkbox"
-                  checked={bracket.showOnPublicPages !== false}
+                  checked={Boolean(bracket.showOnPublicPages)}
                   disabled={isUpdatingVisibility}
                   onChange={(e) => handleTogglePublicVisibility(e.target.checked)}
                   className="w-4 h-4 rounded cursor-pointer accent-[#F26522]"
                 />
-                <span className={`text-xs font-bold ${bracket.showOnPublicPages !== false ? 'text-[#19398A] dark:text-[#00A3E0]' : 'text-slate-400'}`}>
-                  {lang === 'bn' ? 'হোম ও আইপিএল পেজে ফিক্সচার দেখান' : 'Show on Home & IPL'}
+                <span className={`text-xs font-bold ${bracket.showOnPublicPages ? 'text-[#19398A] dark:text-[#00A3E0]' : 'text-slate-400'}`}>
+                  {lang === 'bn'
+                    ? (bracket.showOnPublicPages ? 'হোম ও আইপিএল পেজে প্রদর্শিত হচ্ছে' : 'হোম ও আইপিএল পেজে দেখান')
+                    : (bracket.showOnPublicPages ? 'Visible on Home & IPL' : 'Show on Home & IPL')}
                 </span>
               </label>
             )}

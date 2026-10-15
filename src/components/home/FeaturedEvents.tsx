@@ -232,9 +232,22 @@ export default function FeaturedEvents({ events, posts = [] }: FeaturedEventsPro
 
             {/* Events Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {events.slice(0, 3).map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              {[...events]
+                .filter((e) => e.published !== false && e.status !== 'archived')
+                .sort((a, b) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  const aEnd = a.endDate || a.startDate || '';
+                  const bEnd = b.endDate || b.startDate || '';
+                  const aFuture = aEnd >= today;
+                  const bFuture = bEnd >= today;
+                  if (aFuture && !bFuture) return -1;
+                  if (!aFuture && bFuture) return 1;
+                  return (a.startDate || '').localeCompare(b.startDate || '');
+                })
+                .slice(0, 3)
+                .map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
             </div>
           </div>
         )}
