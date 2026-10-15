@@ -21,14 +21,13 @@ const inter = Inter({
   display: 'swap',
 });
 
-const siteUrl =
+const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
     ? process.env.NEXT_PUBLIC_SITE_URL
     : process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'https://iswampur.vercel.app';
+    : 'https://iswampur.vercel.app'
+).replace(/\/+$/, '');
 
 export const viewport: Viewport = {
   themeColor: '#08143A',
@@ -77,7 +76,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/og-image.jpg',
+        url: `${siteUrl}/og-image.jpg`,
         secureUrl: `${siteUrl}/og-image.jpg`,
         width: 1200,
         height: 630,
@@ -85,20 +84,12 @@ export const metadata: Metadata = {
         alt: 'Iswampur Premier League 2026 & Village Digital Platform',
       },
       {
-        url: '/og-image.png',
-        secureUrl: `${siteUrl}/og-image.png`,
-        width: 1200,
-        height: 630,
-        type: 'image/png',
-        alt: 'Iswampur Premier League 2026 HD Banner',
-      },
-      {
-        url: '/og-image-square.jpg',
+        url: `${siteUrl}/og-image-square.jpg`,
         secureUrl: `${siteUrl}/og-image-square.jpg`,
-        width: 600,
-        height: 600,
+        width: 800,
+        height: 800,
         type: 'image/jpeg',
-        alt: 'Iswampur Digital Platform Square Icon',
+        alt: 'Iswampur Village Digital Platform Square Icon',
       },
     ],
   },
@@ -224,6 +215,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="ঈশ্বমপুর" />
+        <meta property="og:image:secure_url" content={`${siteUrl}/og-image.jpg`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
