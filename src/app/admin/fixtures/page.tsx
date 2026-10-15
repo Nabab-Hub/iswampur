@@ -494,30 +494,51 @@ export default function AdminFixturesPage() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to update winner');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update winner');
+      }
+
       const updatedBracket = await res.json();
-      setBracket(updatedBracket);
+      if (updatedBracket && updatedBracket.rounds) {
+        setBracket(updatedBracket);
+      }
+
       playSoundEffect('chime');
 
-      // Blast party paper / confetti!
-      const isGrandFinale =
-        Boolean(updatedBracket.isComplete) ||
-        match.roundName?.en?.toLowerCase().includes('final') ||
-        match.roundName?.bn?.includes('ফাইনাল');
+      // Blast party paper / confetti safely
+      const roundNameEn =
+        typeof match.roundName === 'string'
+          ? match.roundName
+          : match.roundName?.en || '';
+      const roundNameBn =
+        typeof match.roundName === 'string'
+          ? match.roundName
+          : match.roundName?.bn || '';
 
-      if (isGrandFinale) {
-        fireChampionshipGrandBurst();
-      } else {
-        firePartyPopper();
+      const isGrandFinale =
+        Boolean(updatedBracket?.isComplete) ||
+        roundNameEn.toLowerCase().includes('final') ||
+        roundNameBn.includes('ফাইনাল');
+
+      try {
+        if (isGrandFinale) {
+          fireChampionshipGrandBurst();
+        } else {
+          firePartyPopper();
+        }
+      } catch (confettiErr) {
+        console.warn('Confetti trigger ignored:', confettiErr);
       }
 
       toast.success(
         lang === 'bn'
-          ? `🎉 অভিনন্দন! ${winnerTeam.name} ম্যাচ জয়ী হিসেবে চিহ্নিত হয়েছে`
-          : `🎉 Congratulations! ${winnerTeam.name} marked as match winner`
+          ? `🎉 অভিনন্দন! ${winnerTeam?.name || 'দল'} ম্যাচ জয়ী হিসেবে চিহ্নিত হয়েছে`
+          : `🎉 Congratulations! ${winnerTeam?.name || 'Team'} marked as match winner`
       );
       setConfirmWinnerData(null);
     } catch (err: any) {
+      console.error('Error in handleDeclareWinner:', err);
       toast.error(err.message || 'Error updating winner');
     } finally {
       setIsDeclaringWinner(false);
@@ -834,7 +855,9 @@ export default function AdminFixturesPage() {
                       </div>
                       <div>
                         <h3 className="font-black text-lg text-[#08143A] dark:text-white">
-                          {round.roundName[lang] || round.roundName.bn}
+                          {typeof round.roundName === 'string'
+                            ? round.roundName
+                            : round.roundName?.[lang] || round.roundName?.bn || round.roundName?.en || `Round ${round.roundNumber}`}
                         </h3>
                         <span className="text-xs text-slate-400">
                           {round.matches.length} {lang === 'bn' ? 'টি ম্যাচ নির্ধারিত' : 'matches scheduled'}
@@ -984,9 +1007,9 @@ export default function AdminFixturesPage() {
                           {/* Team A Card */}
                           <div
                             className={`p-3 rounded-2xl border transition-all ${
-                              match.winnerId === match.teamA.id
+                              match.winnerId === match.teamA?.id
                                 ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-black'
-                                : match.winnerId && match.winnerId !== match.teamA.id
+                                : match.winnerId && match.winnerId !== match.teamA?.id
                                 ? 'bg-slate-50 dark:bg-[#050D24] opacity-50 border-transparent'
                                 : 'bg-[#f0f4fa] dark:bg-[#0c1a40] border-[#cbd9ec] dark:border-[#1d3575]'
                             }`}
@@ -994,12 +1017,12 @@ export default function AdminFixturesPage() {
                             <div className="flex items-center justify-between gap-2">
                               <div>
                                 <div className="flex items-center gap-1.5">
-                                  {match.winnerId === match.teamA.id && <Crown className="w-4 h-4 text-emerald-600 shrink-0" />}
+                                  {match.winnerId === match.teamA?.id && <Crown className="w-4 h-4 text-emerald-600 shrink-0" />}
                                   <h4 className="font-black text-sm text-[#08143A] dark:text-white leading-tight">
-                                    {match.teamA.name}
+                                    {match.teamA?.name || 'Team A'}
                                   </h4>
                                 </div>
-                                {match.teamA.representativeName && (
+                                {match.teamA?.representativeName && (
                                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                                     {match.teamA.representativeName} {match.teamA.phone ? `(${match.teamA.phone})` : ''}
                                   </p>
@@ -1007,10 +1030,10 @@ export default function AdminFixturesPage() {
                               </div>
 
                               {/* Declare Team A Won Button */}
-                              {!isMatchCompleted && !isBye && (
+                              {!isMatchCompleted && !isBye && match.teamA && (
                                 <button
                                   onClick={() => {
-                                    firePartyPopper();
+                                    try { firePartyPopper(); } catch {}
                                     setConfirmWinnerData({ match, winnerTeam: match.teamA });
                                   }}
                                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs cursor-pointer active:scale-95 transition-all"
@@ -1021,7 +1044,7 @@ export default function AdminFixturesPage() {
                             </div>
 
                             {/* Score Display */}
-                            {match.teamA.score && (
+                            {match.teamA?.score && (
                               <p className="font-mono text-xs font-black text-[#19398A] dark:text-cyan-300 mt-1.5">
                                 🏏 {match.teamA.score}
                               </p>
@@ -1039,9 +1062,9 @@ export default function AdminFixturesPage() {
                           {match.teamB ? (
                             <div
                               className={`p-3 rounded-2xl border transition-all ${
-                                match.winnerId === match.teamB.id
+                                match.winnerId === match.teamB?.id
                                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-black'
-                                  : match.winnerId && match.winnerId !== match.teamB.id
+                                  : match.winnerId && match.winnerId !== match.teamB?.id
                                   ? 'bg-slate-50 dark:bg-[#050D24] opacity-50 border-transparent'
                                   : 'bg-[#f0f4fa] dark:bg-[#0c1a40] border-[#cbd9ec] dark:border-[#1d3575]'
                               }`}
@@ -1049,12 +1072,12 @@ export default function AdminFixturesPage() {
                               <div className="flex items-center justify-between gap-2">
                                 <div>
                                   <div className="flex items-center gap-1.5">
-                                    {match.winnerId === match.teamB.id && <Crown className="w-4 h-4 text-emerald-600 shrink-0" />}
+                                    {match.winnerId === match.teamB?.id && <Crown className="w-4 h-4 text-emerald-600 shrink-0" />}
                                     <h4 className="font-black text-sm text-[#08143A] dark:text-white leading-tight">
-                                      {match.teamB.name}
+                                      {match.teamB?.name || 'Team B'}
                                     </h4>
                                   </div>
-                                  {match.teamB.representativeName && (
+                                  {match.teamB?.representativeName && (
                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                                       {match.teamB.representativeName} {match.teamB.phone ? `(${match.teamB.phone})` : ''}
                                     </p>
@@ -1065,7 +1088,7 @@ export default function AdminFixturesPage() {
                                 {!isMatchCompleted && !isBye && (
                                   <button
                                     onClick={() => {
-                                      firePartyPopper();
+                                      try { firePartyPopper(); } catch {}
                                       setConfirmWinnerData({ match, winnerTeam: match.teamB! });
                                     }}
                                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs cursor-pointer active:scale-95 transition-all"
@@ -1271,8 +1294,8 @@ export default function AdminFixturesPage() {
           message={
             confirmWinnerData
               ? lang === 'bn'
-                ? `আপনি কি নিশ্চিত যে "${confirmWinnerData.winnerTeam.name}" দলটিকে ম্যাচ #${confirmWinnerData.match.matchNumber} এর চূড়ান্ত বিজয়ী হিসেবে ঘোষণা করতে চান? বিজয়ী দলটি পরবর্তী রাউন্ডে উন্নীত হবে।`
-                : `Are you sure you want to declare "${confirmWinnerData.winnerTeam.name}" as the winner of Match #${confirmWinnerData.match.matchNumber}? This team will advance to the next tournament stage.`
+                ? `আপনি কি নিশ্চিত যে "${confirmWinnerData?.winnerTeam?.name || ''}" দলটিকে ম্যাচ #${confirmWinnerData?.match?.matchNumber || ''} এর চূড়ান্ত বিজয়ী হিসেবে ঘোষণা করতে চান? বিজয়ী দলটি পরবর্তী রাউন্ডে উন্নীত হবে।`
+                : `Are you sure you want to declare "${confirmWinnerData?.winnerTeam?.name || ''}" as the winner of Match #${confirmWinnerData?.match?.matchNumber || ''}? This team will advance to the next tournament stage.`
               : ''
           }
           confirmText={lang === 'bn' ? 'হ্যাঁ, বিজয়ী ঘোষণা করুন' : 'Confirm Winner'}

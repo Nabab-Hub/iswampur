@@ -66,11 +66,16 @@ export async function PATCH(
       currentRound.status = 'COMPLETED';
 
       // Check if this was the Final match!
+      const roundNameEn =
+        typeof currentRound.roundName === 'string'
+          ? currentRound.roundName
+          : currentRound.roundName?.en || '';
+
       const isFinalRound =
         (currentRound.matches.length === 1 && Boolean(currentRound.matches[0].teamB)) ||
-        (currentRound.roundName.en.toLowerCase().includes('final') &&
-          !currentRound.roundName.en.toLowerCase().includes('semi') &&
-          !currentRound.roundName.en.toLowerCase().includes('quarter'));
+        (roundNameEn.toLowerCase().includes('final') &&
+          !roundNameEn.toLowerCase().includes('semi') &&
+          !roundNameEn.toLowerCase().includes('quarter'));
 
       if (isFinalRound) {
         const finalMatch = currentRound.matches[0];
@@ -90,11 +95,13 @@ export async function PATCH(
 
           // Populate 3rd place from semi-final losing contenders
           if (!bracket.standings.thirdPlace && bracket.rounds.length >= 2) {
-            const semiRound = bracket.rounds.find(
-              (r) =>
+            const semiRound = bracket.rounds.find((r) => {
+              const rName = typeof r.roundName === 'string' ? r.roundName : r.roundName?.en || '';
+              return (
                 r.roundNumber === currentRound.roundNumber - 1 ||
-                r.roundName.en.toLowerCase().includes('semi')
-            );
+                rName.toLowerCase().includes('semi')
+              );
+            });
             if (semiRound) {
               const semiLoser = semiRound.matches.find((m) => m.loserId && m.loserName);
               if (semiLoser && semiLoser.loserId && semiLoser.loserName) {

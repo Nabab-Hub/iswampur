@@ -1213,21 +1213,33 @@ export const repository = {
 
   // Tournament Fixtures & Live Bracket Draw
   async getTournamentBracket(eventId: string): Promise<TournamentBracketData | null> {
+    const candidateIds = Array.from(
+      new Set([
+        eventId,
+        eventId.replace(/^event-/, ''),
+        `event-${eventId.replace(/^event-/, '')}`,
+        eventId === 'event-ipl-2026' || eventId === 'iswampur-premier-league-2026' ? 'event-ipl-2026' : eventId,
+        eventId === 'event-ipl-2026' || eventId === 'iswampur-premier-league-2026' ? 'iswampur-premier-league-2026' : eventId,
+      ])
+    );
+
     if (db) {
-      try {
-        const snap = await getDoc(doc(db, 'brackets', eventId));
-        if (snap.exists()) {
-          const data = snap.data() as TournamentBracketData;
-          const idx = globalStore.brackets.findIndex((b) => b.eventId === eventId);
-          if (idx >= 0) globalStore.brackets[idx] = data;
-          else globalStore.brackets.push(data);
-          return data;
+      for (const id of candidateIds) {
+        try {
+          const snap = await getDoc(doc(db, 'brackets', id));
+          if (snap.exists()) {
+            const data = snap.data() as TournamentBracketData;
+            const idx = globalStore.brackets.findIndex((b) => candidateIds.includes(b.eventId));
+            if (idx >= 0) globalStore.brackets[idx] = data;
+            else globalStore.brackets.push(data);
+            return data;
+          }
+        } catch (err) {
+          console.warn('Firestore getTournamentBracket error:', err);
         }
-      } catch (err) {
-        console.warn('Firestore getTournamentBracket error:', err);
       }
     }
-    return globalStore.brackets.find((b) => b.eventId === eventId) || null;
+    return globalStore.brackets.find((b) => candidateIds.includes(b.eventId)) || null;
   },
 
   async saveTournamentBracket(bracket: TournamentBracketData): Promise<TournamentBracketData> {

@@ -177,6 +177,21 @@ export default function Footer() {
             <span className="text-[#F26522] font-black">{lang === 'bn' ? 'ঈশ্বমপুর গ্রাম কমিটি' : 'Iswampur Gram Committee'}</span>
           </div>
         </div>
+
+        {/* Developer & Platform Maintainer Credit */}
+        <div className="mt-4 pt-3 border-t border-[#cbd9ec]/40 dark:border-[#1d3575]/40 flex items-center justify-center text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">
+          <span>
+            Made and Managed by{' '}
+            <a
+              href="https://skahidulla.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#F26522] hover:text-[#F9A01B] font-bold underline underline-offset-2 transition-colors inline-flex items-center gap-0.5"
+            >
+              Sk Ahidulla
+            </a>
+          </span>
+        </div>
       </div>
     </footer>
   );

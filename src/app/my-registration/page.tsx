@@ -24,11 +24,16 @@ function MyRegistrationContent() {
   const initialRegId = searchParams.get('id');
 
   const { lang, t } = useLanguage();
-  const { user, signInWithGoogle } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
+  const [mounted, setMounted] = useState(false);
   const [registrations, setRegistrations] = useState<TeamRegistration[]>([]);
   const [selectedReg, setSelectedReg] = useState<TeamRegistration | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     async function fetchMyRegistrations() {
@@ -55,8 +60,19 @@ function MyRegistrationContent() {
         setLoading(false);
       }
     }
-    fetchMyRegistrations();
-  }, [user, initialRegId]);
+    if (mounted) {
+      fetchMyRegistrations();
+    }
+  }, [user, initialRegId, mounted]);
+
+  if (!mounted || authLoading) {
+    return (
+      <main className="flex-1 max-w-lg mx-auto px-4 py-24 text-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#F26522] border-t-transparent animate-spin mx-auto" />
+        <p className="text-xs font-semibold text-slate-400">Loading...</p>
+      </main>
+    );
+  }
 
   if (!user) {
     return (
@@ -65,10 +81,10 @@ function MyRegistrationContent() {
           <User className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-[#08143A] dark:text-white">
+          <h1 className="text-2xl font-black text-[#08143A] dark:text-white" suppressHydrationWarning>
             {lang === 'bn' ? 'দল ও পাস ট্র্যাকিং' : 'Team & Pass Tracking'}
           </h1>
-          <p className="text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold">
+          <p className="text-sm text-[#273656] dark:text-[#CBD5E1] font-semibold" suppressHydrationWarning>
             {lang === 'bn'
               ? 'আপনার নিবন্ধিত দল ও অফিসিয়াল টিম পাস দেখতে Google দিয়ে লগইন করুন।'
               : 'Sign in with Google to view your registered squad and download matchday passes.'}
@@ -76,10 +92,10 @@ function MyRegistrationContent() {
         </div>
         <button
           onClick={signInWithGoogle}
-          className="px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] shadow-md inline-flex items-center gap-2"
+          className="px-6 py-3.5 rounded-xl font-black text-white bg-gradient-to-r from-[#F26522] to-[#F9A01B] hover:from-[#e05615] hover:to-[#e8900f] shadow-md inline-flex items-center gap-2 cursor-pointer"
         >
           <User className="w-4 h-4" />
-          <span>{lang === 'bn' ? 'Google দিয়ে প্রবেশ করুন' : 'Sign in with Google'}</span>
+          <span suppressHydrationWarning>{lang === 'bn' ? 'Google দিয়ে প্রবেশ করুন' : 'Sign in with Google'}</span>
         </button>
       </main>
     );
