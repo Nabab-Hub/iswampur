@@ -236,7 +236,7 @@ export async function generateNoticePdf(
     borderWidth: 1,
   });
 
-  page.drawText('SUBJECT / TITLE:', {
+  page.drawText('TITLE:', {
     x: 48,
     y: subjBoxY + 28,
     size: 8,
@@ -273,7 +273,7 @@ export async function generateNoticePdf(
   currentY -= 18;
 
   for (const line of wrappedLines) {
-    if (currentY < 180) break; // Keep space for stamp and signatures
+    if (currentY < 60) break;
     if (line === '') {
       currentY -= 8;
       continue;
@@ -290,126 +290,13 @@ export async function generateNoticePdf(
     currentY -= 15;
   }
 
-  // Note if bilingual
-  currentY -= 10;
-  if (currentY > 200) {
-    page.drawText('* Note: Original bilingual edition published digitally on Iswampur Web Portal.', {
-      x: 40,
-      y: currentY,
-      size: 7.5,
-      font: fontOblique,
-      color: rgb(0.5, 0.55, 0.65),
-    });
-  }
-
-  // 5. Official Authority Stamp & Signatures
-  const footerCardY = 48;
-  const footerCardHeight = 115;
-
-  page.drawRectangle({
-    x: 36,
-    y: footerCardY,
-    width: width - 72,
-    height: footerCardHeight,
-    color: rgb(0.97, 0.98, 1.0),
-    borderColor: lightGrey,
-    borderWidth: 1,
-  });
-
-  // Stamp Box Graphic (Left Side)
-  const stampBoxX = 52;
-  const stampBoxY = footerCardY + 14;
-  page.drawRectangle({
-    x: stampBoxX,
-    y: stampBoxY,
-    width: 90,
-    height: 85,
-    borderColor: blueElectric,
-    borderWidth: 1.5,
-  });
-
-  page.drawText('OFFICIAL SEAL', {
-    x: stampBoxX + 11,
-    y: stampBoxY + 68,
-    size: 8,
-    font: fontBold,
-    color: blueElectric,
-  });
-
-  page.drawText('* ISWAMPUR *', {
-    x: stampBoxX + 9,
-    y: stampBoxY + 44,
-    size: 9,
-    font: fontBold,
-    color: navyDark,
-  });
-
-  page.drawText('COMMITTEE', {
-    x: stampBoxX + 16,
-    y: stampBoxY + 30,
-    size: 8,
-    font: fontBold,
-    color: navyDark,
-  });
-
-  page.drawText('DIGITALLY VERIFIED', {
-    x: stampBoxX + 5,
-    y: stampBoxY + 12,
-    size: 6.5,
-    font: fontBold,
-    color: orangeFire,
-  });
-
-  // Signatory Desk (Right Side)
-  const signX = width - 260;
-  page.drawText('BY ORDER OF THE COMMITTEE', {
-    x: signX,
-    y: footerCardY + 90,
-    size: 8,
-    font: fontBold,
-    color: rgb(0.4, 0.45, 0.55),
-  });
-
-  page.drawText('Sk Ahidulla & Executive Officers', {
-    x: signX,
-    y: footerCardY + 68,
-    size: 11,
-    font: fontBold,
-    color: navyDark,
-  });
-
-  const cleanSignatory = sanitizeForPdf(notice.signatory, 'General Secretary / Convener');
-  page.drawText(cleanSignatory, {
-    x: signX,
-    y: footerCardY + 52,
-    size: 9,
-    font: fontRegular,
-    color: slateText,
-  });
-
-  page.drawText('Iswampur Village Welfare & Sports Committee', {
-    x: signX,
-    y: footerCardY + 38,
-    size: 8,
-    font: fontRegular,
-    color: slateText,
-  });
-
-  page.drawText(`Digital ID: ISW-NOT-${notice.id.substring(0, 10).toUpperCase()}`, {
-    x: signX,
-    y: footerCardY + 20,
-    size: 7,
+  // Fixed Page Bottom Note
+  page.drawText('* Note: Original bilingual edition published digitally on Iswampur Web Portal.', {
+    x: 40,
+    y: 36,
+    size: 7.5,
     font: fontOblique,
     color: rgb(0.5, 0.55, 0.65),
-  });
-
-  // Bottom Notice Disclaimer
-  page.drawText('Official circular from https://iswampur.com | Digitally signed & valid without physical seal.', {
-    x: 40,
-    y: 28,
-    size: 6.8,
-    font: fontRegular,
-    color: rgb(0.45, 0.5, 0.6),
   });
 
   return await pdfDoc.save();
