@@ -425,7 +425,7 @@ export async function generatePassPdf(
 
   page.drawText('OFFICIAL MATCHDAY SECURITY & GROUND REGULATIONS:', {
     x: 52,
-    y: noticeY + 76,
+    y: noticeY + 74,
     size: 9.5,
     font: fontBold,
     color: navyMid,
@@ -433,31 +433,28 @@ export async function generatePassPdf(
 
   page.drawText('1. Print this official pass or present the high-resolution digital pass upon arriving at the ground gate.', {
     x: 52,
-    y: noticeY + 58,
+    y: noticeY + 54,
     size: 8.5,
     font: fontRegular,
     color: rgb(0.2, 0.25, 0.35),
   });
 
-  page.drawText('2. QR code will be scanned at ground entry. Any counterfeit or duplicate pass attempt', {
-    x: 52,
-    y: noticeY + 41,
-    size: 8,
-    font: fontBold,
-    color: orangeFire,
-  });
+  const rule2Text = '2. QR code will be scanned at ground entry. Any counterfeit or duplicate pass attempt leads to immediate team disqualification.';
+  const maxRule2Width = width - 108;
+  const rule2TextWidth = fontBold.widthOfTextAtSize(rule2Text, 1);
+  const rule2FontSize = Math.min(7.8, maxRule2Width / rule2TextWidth);
 
-  page.drawText('leads to immediate team disqualification.', {
-    x: 63,
-    y: noticeY + 29,
-    size: 8,
+  page.drawText(rule2Text, {
+    x: 52,
+    y: noticeY + 36,
+    size: rule2FontSize,
     font: fontBold,
     color: orangeFire,
   });
 
   page.drawText('Issued by: Iswampur Tournament Committee & Village Council | Contact: support@iswampur.in', {
     x: 52,
-    y: noticeY + 13,
+    y: noticeY + 16,
     size: 7.5,
     font: fontRegular,
     color: rgb(0.4, 0.45, 0.55),
